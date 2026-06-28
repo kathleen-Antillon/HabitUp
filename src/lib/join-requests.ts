@@ -92,7 +92,9 @@ export async function createJoinRequestsForChallenge(
   invitedById: string,
   identifiers: string[]
 ) {
-  const uniqueIdentifiers = [...new Set(identifiers.map((v) => v.trim()).filter(Boolean))];
+  const uniqueIdentifiers = Array.from(
+    new Set(identifiers.map((v) => v.trim()).filter(Boolean))
+  );
   if (uniqueIdentifiers.length === 0) return { created: 0, errors: [] as string[] };
 
   const errors: string[] = [];
@@ -111,17 +113,20 @@ export async function createJoinRequestsForChallenge(
     return { created: 0, errors: ["No se pudo enviar las invitaciones."] };
   }
 
+  const { name: challengeName, inviteCode } = challenge;
+  const invitedByUsername = inviter.username;
+
   async function sendJoinRequestNotification(
     invitedUserId: string,
     joinRequestId: string
   ) {
     await notifyJoinRequest({
       invitedUserId,
-      invitedById: invitedById,
-      invitedByUsername: inviter.username,
+      invitedById,
+      invitedByUsername,
       challengeId,
-      challengeName: challenge.name,
-      inviteCode: challenge.inviteCode,
+      challengeName,
+      inviteCode,
       joinRequestId,
     });
   }

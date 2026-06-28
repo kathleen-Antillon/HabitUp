@@ -45,7 +45,9 @@ export async function createChallengeAction(formData: FormData): Promise<ActionR
     ? JSON.parse(invitedUsersRaw).filter((v: string) => v.trim())
     : [];
 
-  const uniqueInvites = [...new Set(invitedIdentifiers.map((v) => v.trim()).filter(Boolean))];
+  const uniqueInvites = Array.from(
+    new Set(invitedIdentifiers.map((v) => v.trim()).filter(Boolean))
+  );
   const inviteErrors: string[] = [];
 
   for (const identifier of uniqueInvites) {

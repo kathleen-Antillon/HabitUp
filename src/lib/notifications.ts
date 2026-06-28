@@ -103,6 +103,13 @@ async function usersShareChallengeContext(
   return membershipA.status === "ACTIVE" || membershipB.status === "ACTIVE";
 }
 
+function isPersonalNotificationType(type: NotificationTypeValue) {
+  return (
+    type === NotificationType.PENITENCIA_RECEIVED ||
+    type === NotificationType.ATRAPADO_RECEIVED
+  );
+}
+
 function bypassesSharedChallengeFilter(type: NotificationTypeValue) {
   return (
     isPersonalNotificationType(type) ||
@@ -125,7 +132,7 @@ async function filterRecipientsAboutUser(
   subjectUserId: string,
   challengeId?: string | null
 ): Promise<string[]> {
-  const uniqueCandidates = [...new Set(candidateUserIds.filter(Boolean))];
+  const uniqueCandidates = Array.from(new Set(candidateUserIds.filter(Boolean)));
   if (uniqueCandidates.length === 0) return [];
 
   const checks = await Promise.all(
@@ -168,7 +175,7 @@ export async function createNotifications(
   userIds: string[],
   input: Omit<CreateNotificationInput, "userId">
 ) {
-  const uniqueUserIds = [...new Set(userIds.filter(Boolean))];
+  const uniqueUserIds = Array.from(new Set(userIds.filter(Boolean)));
   if (uniqueUserIds.length === 0) return;
 
   try {
@@ -194,29 +201,35 @@ export async function getNotificationsForUser(
     const filtered: NotificationView[] = [];
 
     for (const notification of notifications) {
-      if (bypassesSharedChallengeFilter(notification.type)) {
-        filtered.push(notification);
+      const typedNotification: NotificationView = {
+        ...notification,
+        type: notification.type as NotificationTypeValue,
+      };
+
+      if (bypassesSharedChallengeFilter(typedNotification.type)) {
+        filtered.push(typedNotification);
         continue;
       }
 
-      if (notification.type === NotificationType.JOIN_REQUEST) {
-        filtered.push(notification);
+      if (typedNotification.type === NotificationType.JOIN_REQUEST) {
+        filtered.push(typedNotification);
         continue;
       }
 
-      const subjectUserId = notification.targetUserId ?? notification.actorUserId;
+      const subjectUserId =
+        typedNotification.targetUserId ?? typedNotification.actorUserId;
       if (!subjectUserId) {
-        filtered.push(notification);
+        filtered.push(typedNotification);
         continue;
       }
 
       const allowed = await canReceiveNotificationAboutUser(
         userId,
         subjectUserId,
-        notification.challengeId
+        typedNotification.challengeId
       );
 
-      if (allowed) filtered.push(notification);
+      if (allowed) filtered.push(typedNotification);
     }
 
     return filtered;

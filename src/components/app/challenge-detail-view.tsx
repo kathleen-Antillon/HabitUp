@@ -116,13 +116,7 @@ export function ChallengeDetailView({
 
   useEffect(() => {
     setFields(fieldsFromChallenge(challenge));
-  }, [
-    challenge.name,
-    challenge.description,
-    challenge.mainGoal,
-    challenge.startDate,
-    challenge.endDate,
-  ]);
+  }, [challenge]);
 
   function resetFields() {
     setFields(fieldsFromChallenge(challenge));
