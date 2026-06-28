@@ -24,7 +24,10 @@ type Props = {
 type ActiveOption = "create" | "join";
 
 const boxBase =
-  "flex aspect-square min-h-[220px] w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 p-6 text-center transition-colors duration-200 min-[540px]:min-h-[240px]";
+  "flex w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 p-4 text-center transition-colors duration-200 min-[540px]:aspect-square min-[540px]:min-h-[240px] min-[540px]:p-6";
+
+const createBoxBase =
+  "min-h-[132px] min-[540px]:min-h-[240px]";
 
 function boxStyles(active: boolean) {
   return cn(
@@ -35,16 +38,18 @@ function boxStyles(active: boolean) {
   );
 }
 
-function iconStyles(active: boolean) {
+function iconStyles(active: boolean, compact = false) {
   return cn(
-    "flex h-16 w-16 items-center justify-center rounded-2xl transition-colors duration-200",
+    "flex items-center justify-center rounded-2xl transition-colors duration-200",
+    compact ? "h-12 w-12 min-[540px]:h-16 min-[540px]:w-16" : "h-16 w-16",
     active ? "bg-emerald-600 text-white" : "bg-slate-200 text-slate-700"
   );
 }
 
-function labelStyles(active: boolean) {
+function labelStyles(active: boolean, compact = false) {
   return cn(
-    "whitespace-nowrap text-base font-semibold transition-colors duration-200",
+    "whitespace-nowrap font-semibold transition-colors duration-200",
+    compact ? "text-sm min-[540px]:text-base" : "text-base",
     active ? "text-emerald-900" : "text-slate-900"
   );
 }
@@ -106,7 +111,7 @@ export function ChallengeActionModal({ trigger, defaultOpen = false, onClose }: 
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="w-[calc(100%-2rem)] max-w-3xl gap-6 p-8 sm:p-10">
         <DialogHeader>
-          <DialogTitle className="text-center text-2xl">Comienza con un reto ahora</DialogTitle>
+          <DialogTitle className="text-center text-xl min-[540px]:text-2xl">Añade un nuevo reto</DialogTitle>
         </DialogHeader>
 
         <div className="grid grid-cols-1 gap-5 min-[540px]:grid-cols-2">
@@ -117,14 +122,15 @@ export function ChallengeActionModal({ trigger, defaultOpen = false, onClose }: 
             onMouseEnter={() => setActiveOption("create")}
             className={cn(
               boxStyles(isCreateActive),
+              createBoxBase,
               isCreateActive &&
                 "hover:border-emerald-400 hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
             )}
           >
-            <div className={iconStyles(isCreateActive)}>
-              <Plus className="h-8 w-8" strokeWidth={2.5} />
+            <div className={iconStyles(isCreateActive, true)}>
+              <Plus className="h-6 w-6 min-[540px]:h-8 min-[540px]:w-8" strokeWidth={2.5} />
             </div>
-            <span className={labelStyles(isCreateActive)}>Crear nuevo reto</span>
+            <span className={labelStyles(isCreateActive, true)}>Crear nuevo reto</span>
           </button>
 
           <div
