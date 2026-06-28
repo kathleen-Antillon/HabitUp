@@ -1,0 +1,392 @@
+import { prisma } from "@/lib/db";
+import {
+  challengeDayNumber,
+  daysBetween,
+  startOfDay,
+  toInputDate,
+} from "@/lib/utils";
+
+export type DayProgressSnapshot = {
+  isComplete: boolean;
+  isPartial: boolean;
+};
+
+export type ProgressByDate = Record<string, DayProgressSnapshot>;
+
+export type DailyGoalsMode = "FIXED" | "VARIABLE";
+
+export function getDailyGoalsForDate(
+  dailyGoals: { id: string; label: string; order: number; date: Date | null }[],
+  mode: DailyGoalsMode | string = "FIXED",
+  date: Date = new Date()
+) {
+  if (mode === "VARIABLE") {
+    const day = startOfDay(date);
+    return dailyGoals
+      .filter((goal) => goal.date && startOfDay(goal.date).getTime() === day.getTime())
+      .sort((a, b) => a.order - b.order);
+  }
+
+  const fixedGoals = dailyGoals.filter((goal) => !goal.date);
+  const goals = fixedGoals.length > 0 ? fixedGoals : dailyGoals;
+  return [...goals].sort((a, b) => a.order - b.order);
+}
+
+export function didMissAllGoalsYesterday(
+  challenge: {
+    startDate: Date;
+    endDate: Date;
+    dailyGoals: { id: string; label: string; order: number; date: Date | null }[];
+  },
+  yesterdayProgress: { completedGoalIds: string } | null,
+  yesterday: Date = startOfDay(new Date(Date.now() - 86400000))
+) {
+  const day = startOfDay(yesterday);
+  const challengeStart = startOfDay(challenge.startDate);
+  const challengeEnd = startOfDay(challenge.endDate);
+
+  if (day < challengeStart || day > challengeEnd) return false;
+
+  const goals = getDailyGoalsForDate(challenge.dailyGoals, "FIXED", day);
+  if (goals.length === 0) return false;
+
+  if (!yesterdayProgress) return true;
+
+  try {
+    const completedIds: string[] = JSON.parse(yesterdayProgress.completedGoalIds);
+    return completedIds.length === 0;
+  } catch {
+    return true;
+  }
+}
+
+export async function getUserChallenges(userId: string) {
+  const memberships = await prisma.challengeMember.findMany({
+    where: { userId },
+    include: {
+      challenge: {
+        include: {
+          dailyGoals: { orderBy: { order: "asc" } },
+          members: {
+            where: { status: "ACTIVE" },
+            include: { user: { select: { id: true, username: true } } },
+          },
+          createdBy: { select: { username: true } },
+        },
+      },
+    },
+    orderBy: { joinedAt: "desc" },
+  });
+
+  return memberships.map((m) => ({
+    ...m.challenge,
+    memberStatus: m.status,
+  }));
+}
+
+export async function getFocusChallenge(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { focusChallengeId: true },
+  });
+
+  const challenges = await getUserChallenges(userId);
+  const active = challenges.filter((c) => c.status === "ACTIVE" && c.memberStatus === "ACTIVE");
+
+  if (user?.focusChallengeId) {
+    const focused = active.find((c) => c.id === user.focusChallengeId);
+    if (focused) return focused;
+  }
+
+  return active[0] ?? null;
+}
+
+export async function getChallengeStats(userId: string, challengeId: string) {
+  const challenge = await prisma.challenge.findUnique({
+    where: { id: challengeId },
+    include: {
+      dailyGoals: { orderBy: { order: "asc" } },
+      createdBy: { select: { id: true, username: true } },
+      members: {
+        where: { status: { in: ["ACTIVE", "LEFT"] } },
+        include: {
+          user: { select: { id: true, username: true } },
+        },
+      },
+    },
+  });
+
+  if (!challenge) return null;
+
+  const today = startOfDay();
+  const totalDays = daysBetween(challenge.startDate, challenge.endDate);
+  const currentDay = Math.min(
+    challengeDayNumber(challenge.startDate),
+    totalDays
+  );
+  const daysRemaining = Math.max(0, totalDays - currentDay);
+
+  const todayProgress = await prisma.dailyProgress.findUnique({
+    where: {
+      userId_challengeId_date: { userId, challengeId, date: today },
+    },
+  });
+
+  const yesterday = startOfDay(new Date(today.getTime() - 86400000));
+  const yesterdayProgress = await prisma.dailyProgress.findUnique({
+    where: {
+      userId_challengeId_date: { userId, challengeId, date: yesterday },
+    },
+  });
+
+  const showMissedYesterdayModal = didMissAllGoalsYesterday(
+    challenge,
+    yesterdayProgress
+  );
+
+  if (showMissedYesterdayModal) {
+    try {
+      const { ensureMissedGoalsPenitencia } = await import("@/lib/penitencias");
+      await ensureMissedGoalsPenitencia(userId, challengeId);
+    } catch {
+      // Prisma client may be stale during dev hot reload
+    }
+  }
+
+  const allProgress = await prisma.dailyProgress.findMany({
+    where: { challengeId, isComplete: true },
+    select: { userId: true },
+  });
+
+  const completedDaysByUser = allProgress.reduce<Record<string, number>>((acc, p) => {
+    acc[p.userId] = (acc[p.userId] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  const ranking = challenge.members
+    .map((m) => ({
+      userId: m.user.id,
+      username: m.user.username,
+      completedDays: completedDaysByUser[m.user.id] ?? 0,
+      memberStatus: m.status,
+    }))
+    .sort((a, b) => {
+      if (a.memberStatus !== b.memberStatus) {
+        return a.memberStatus === "ACTIVE" ? -1 : 1;
+      }
+      return b.completedDays - a.completedDays;
+    });
+
+  const userCompletedDays = completedDaysByUser[userId] ?? 0;
+
+  const goalsForToday = getDailyGoalsForDate(challenge.dailyGoals, "FIXED", today);
+
+  const userProgress = await prisma.dailyProgress.findMany({
+    where: { userId, challengeId },
+    select: { date: true, isComplete: true, isPartial: true },
+  });
+
+  const progressByDate = Object.fromEntries(
+    userProgress.map((entry) => [
+      toInputDate(entry.date),
+      { isComplete: entry.isComplete, isPartial: entry.isPartial },
+    ])
+  );
+
+  const recentProgress = await prisma.dailyProgress.findMany({
+    where: { userId, challengeId, isComplete: true },
+    orderBy: { date: "desc" },
+    take: 30,
+  });
+
+  let streak = 0;
+  const sortedDates = recentProgress.map((p) => p.date.getTime()).sort((a, b) => b - a);
+  let checkDate = today.getTime();
+  for (const d of sortedDates) {
+    if (d === checkDate) {
+      streak++;
+      checkDate -= 86400000;
+    } else if (d < checkDate) break;
+  }
+
+  const showCelebration = streak > 0 && streak % 7 === 0;
+
+  return {
+    challenge: {
+      ...challenge,
+      dailyGoals: goalsForToday,
+    },
+    totalDays,
+    currentDay,
+    daysRemaining,
+    todayProgress,
+    ranking,
+    userCompletedDays,
+    streak,
+    showCelebration,
+    progressByDate,
+    showMissedYesterdayModal,
+  };
+}
+
+export async function getUserProfile(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      personalGoal: true,
+      description: true,
+      isNewUser: true,
+    },
+  });
+
+  const completedCount = await prisma.challengeMember.count({
+    where: { userId, status: "COMPLETED" },
+  });
+
+  return user ? { ...user, completedCount } : null;
+}
+
+export type GoalReportView = {
+  id: string;
+  date: string;
+  reason: string | null;
+  status: string;
+  resolution: string | null;
+  resolvedAt: Date | null;
+  createdAt: Date;
+  reportedUser: { id: string; username: string };
+  reporter: { id: string; username: string };
+  reportedProgress: {
+    isComplete: boolean;
+    isPartial: boolean;
+    completedGoalLabels: string[];
+  } | null;
+};
+
+type GoalReportRow = {
+  id: string;
+  reportedUserId: string;
+  date: Date;
+  reason: string | null;
+  status: string;
+  resolution: string | null;
+  resolvedAt: Date | null;
+  createdAt: Date;
+  reportedUser: { id: string; username: string };
+  reporter: { id: string; username: string };
+};
+
+async function mapGoalReportsToViews(
+  challengeId: string,
+  reports: GoalReportRow[]
+): Promise<GoalReportView[]> {
+  if (reports.length === 0) return [];
+
+  const challenge = await prisma.challenge.findUnique({
+    where: { id: challengeId },
+    include: { dailyGoals: { orderBy: { order: "asc" } } },
+  });
+
+  if (!challenge) return [];
+
+  const progressRows = await prisma.dailyProgress.findMany({
+    where: {
+      challengeId,
+      userId: { in: reports.map((r) => r.reportedUserId) },
+      date: { in: reports.map((r) => r.date) },
+    },
+  });
+
+  const progressByKey = new Map(
+    progressRows.map((p) => [`${p.userId}:${p.date.getTime()}`, p])
+  );
+
+  return reports.map((report) => {
+    const progress = progressByKey.get(`${report.reportedUserId}:${report.date.getTime()}`);
+    let completedGoalLabels: string[] = [];
+
+    if (progress) {
+      try {
+        const ids: string[] = JSON.parse(progress.completedGoalIds);
+        const goalsForDay = getDailyGoalsForDate(challenge.dailyGoals, "FIXED", report.date);
+        const labelById = new Map(goalsForDay.map((g) => [g.id, g.label]));
+        completedGoalLabels = ids.map((id) => labelById.get(id) ?? id);
+      } catch {
+        completedGoalLabels = [];
+      }
+    }
+
+    return {
+      id: report.id,
+      date: toInputDate(report.date),
+      reason: report.reason,
+      status: report.status,
+      resolution: report.resolution,
+      resolvedAt: report.resolvedAt,
+      createdAt: report.createdAt,
+      reportedUser: report.reportedUser,
+      reporter: report.reporter,
+      reportedProgress: progress
+        ? {
+            isComplete: progress.isComplete,
+            isPartial: progress.isPartial,
+            completedGoalLabels,
+          }
+        : null,
+    };
+  });
+}
+
+const reportInclude = {
+  reportedUser: { select: { id: true, username: true } },
+  reporter: { select: { id: true, username: true } },
+} as const;
+
+export async function getAllGoalReportsForChallenge(
+  challengeId: string
+): Promise<GoalReportView[]> {
+  const reports = await prisma.goalReport.findMany({
+    where: { challengeId },
+    include: reportInclude,
+    orderBy: { createdAt: "desc" },
+  });
+
+  return mapGoalReportsToViews(challengeId, reports);
+}
+
+export async function getGoalReportsForChallenge(
+  challengeId: string,
+  viewerId: string,
+  isCreator: boolean
+): Promise<GoalReportView[]> {
+  const reports = await prisma.goalReport.findMany({
+    where: {
+      challengeId,
+      ...(isCreator ? { status: "PENDING" } : { reporterUserId: viewerId }),
+    },
+    include: reportInclude,
+    orderBy: { createdAt: "desc" },
+  });
+
+  return mapGoalReportsToViews(challengeId, reports);
+}
+
+export async function getPendingReportIdsAgainstUser(
+  userId: string,
+  challengeId: string
+): Promise<string[]> {
+  const reports = await prisma.goalReport.findMany({
+    where: {
+      challengeId,
+      reportedUserId: userId,
+      status: "PENDING",
+    },
+    select: { id: true },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return reports.map((r) => r.id);
+}

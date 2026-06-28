@@ -1,36 +1,144 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# HabitUp
 
-## Getting Started
+Plataforma de retos individuales y en equipo para promover el crecimiento personal.
 
-First, run the development server:
+## Características
+
+- Landing page con secciones informativas y CTAs
+- Registro e inicio de sesión (usuario/email + contraseña)
+- Recuperación de contraseña (link en consola en desarrollo)
+- Dashboard con bottom navigation (Home, Retos, Perfil, +)
+- Crear retos (alimenticio, deportivo, intelectual, otro)
+- Objetivos diarios con seguimiento y estados (completo, casi, incompleto)
+- Invitaciones por link o código
+- Ranking por días completados
+- Modal de felicitaciones cada 7 días consecutivos
+- Perfil con badges y gestión de cuenta
+
+## Requisitos
+
+- Node.js 18+
+- npm
+
+## Instalación
 
 ```bash
+npm install
+npm run db:push
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abre [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Variables de entorno
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Copia `.env.example` a `.env`:
 
-## Learn More
+```
+DATABASE_URL="postgresql://USER:PASSWORD@HOST/DATABASE?sslmode=require"
+SESSION_SECRET="change-me-to-a-random-secret"
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+NEXT_PUBLIC_GOOGLE_AUTH_ENABLED="false"
+```
 
-To learn more about Next.js, take a look at the following resources:
+> **Nota:** La app usa **PostgreSQL** (no SQLite). En local puedes usar [Neon](https://neon.tech) gratis y pegar la connection string en `DATABASE_URL`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Despliegue en Vercel
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 1. Base de datos (PostgreSQL)
 
-## Deploy on Vercel
+Vercel no soporta SQLite. Crea una base gratuita en una de estas opciones:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **[Neon](https://neon.tech)** (recomendado) → copia la connection string
+- **Vercel Postgres** → en tu proyecto Vercel: Storage → Create Database → Postgres
+- **Supabase** → Settings → Database → Connection string (URI)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 2. Subir el código a GitHub
+
+```bash
+git add .
+git commit -m "Prepare for Vercel deployment"
+git push origin main
+```
+
+### 3. Importar en Vercel
+
+1. Entra en [vercel.com/new](https://vercel.com/new)
+2. Importa el repositorio de GitHub
+3. Framework preset: **Next.js** (detectado automáticamente)
+4. En **Environment Variables**, añade:
+
+| Variable | Valor |
+|----------|--------|
+| `DATABASE_URL` | Tu connection string de PostgreSQL |
+| `SESSION_SECRET` | String aleatorio largo (ej. `openssl rand -base64 32`) |
+| `NEXT_PUBLIC_APP_URL` | `https://tu-proyecto.vercel.app` (actualiza tras el primer deploy) |
+
+Opcionales (Google OAuth):
+
+| Variable | Valor |
+|----------|--------|
+| `GOOGLE_CLIENT_ID` | Client ID de Google |
+| `GOOGLE_CLIENT_SECRET` | Client Secret |
+| `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED` | `true` |
+
+5. Click **Deploy**
+
+El build ejecuta `prisma migrate deploy` automáticamente para crear las tablas.
+
+### 4. Después del deploy
+
+1. Actualiza `NEXT_PUBLIC_APP_URL` con tu URL real de Vercel y redeploy
+2. Si usas Google OAuth, añade en Google Cloud la redirect URI:
+   `https://tu-proyecto.vercel.app/api/auth/google/callback`
+
+### Deploy con CLI (alternativa)
+
+```bash
+npm i -g vercel
+vercel login
+vercel
+# Sigue el asistente y configura las variables de entorno cuando te lo pida
+vercel --prod
+```
+
+## Inicio de sesión con Google
+
+1. Ve a [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+2. Crea un proyecto (o usa uno existente)
+3. Configura la **OAuth consent screen** (External, nombre de app, email de soporte)
+4. Crea credenciales → **OAuth client ID** → tipo **Web application**
+5. En **Authorized redirect URIs** añade:
+   - `http://localhost:3000/api/auth/google/callback` (desarrollo)
+   - `https://tu-dominio.com/api/auth/google/callback` (producción)
+6. Copia Client ID y Client Secret a tu `.env`:
+   ```
+   GOOGLE_CLIENT_ID="tu-client-id"
+   GOOGLE_CLIENT_SECRET="tu-client-secret"
+   NEXT_PUBLIC_GOOGLE_AUTH_ENABLED="true"
+   NEXT_PUBLIC_APP_URL="http://localhost:3000"
+   ```
+7. Reinicia el servidor de desarrollo
+
+## Estructura
+
+```
+src/
+  app/           # Rutas Next.js App Router
+  actions/       # Server actions (auth, retos)
+  components/    # UI y componentes de app
+  lib/           # Utilidades, DB, auth
+prisma/          # Esquema PostgreSQL + migraciones
+```
+
+## Scripts
+
+| Comando | Descripción |
+|---------|-------------|
+| `npm run dev` | Servidor de desarrollo |
+| `npm run build` | Build de producción (+ migraciones) |
+| `npm run db:migrate` | Aplicar migraciones en producción |
+| `npm run db:push` | Sincronizar esquema (solo desarrollo) |
+| `npm run db:studio` | Explorar base de datos |

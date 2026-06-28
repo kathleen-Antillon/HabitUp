@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String   @id @default(cuid())
+  username         String   @unique
+  email            String   @unique
+  passwordHash     String?
+  googleId         String?  @unique
+  image            String?
+  personalGoal     String?
+  description      String?
+  focusChallengeId String?
+  isNewUser        Boolean  @default(true)
+  createdAt        DateTime @default(now())
+
+  createdChallenges Challenge[]          @relation("CreatedBy")
+  memberships       ChallengeMember[]
+  dailyProgress     DailyProgress[]
+  resetTokens       PasswordResetToken[]
+  reportsMade       GoalReport[]         @relation("Reporter")
+  reportsReceived   GoalReport[]         @relation("ReportedUser")
+  penitencias       Penitencia[]
+  penitenciasIssued Penitencia[]         @relation("PenitenciaGenerator")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Challenge {
+  id          String   @id @default(cuid())
+  name        String
+  type        String
+  description String
+  mainGoal    String
+  startDate   DateTime
+  endDate     DateTime
+  inviteCode  String   @unique
+  status      String   @default("ACTIVE")
+  dailyGoalsMode String @default("FIXED")
+  createdById String
+  createdBy   User     @relation("CreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+
+  dailyGoals DailyGoal[]
+  members    ChallengeMember[]
+  progress   DailyProgress[]
+  reports    GoalReport[]
+  penitencias Penitencia[]
+}
+
+model DailyGoal {
+  id          String    @id @default(cuid())
+  challengeId String
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  date        DateTime?
+  label       String
+  order       Int       @default(0)
+
+  @@index([challengeId, date])
+}
+
+model ChallengeMember {
+  id          String    @id @default(cuid())
+  userId      String
+  challengeId String
+  status      String    @default("ACTIVE")
+  joinedAt    DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, challengeId])
+}
+
+model DailyProgress {
+  id               String    @id @default(cuid())
+  userId           String
+  challengeId      String
+  date             DateTime
+  completedGoalIds String    @default("[]")
+  isComplete       Boolean   @default(false)
+  isPartial        Boolean   @default(false)
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge        Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, challengeId, date])
+}
+
+model GoalReport {
+  id             String    @id @default(cuid())
+  challengeId    String
+  reportedUserId String
+  reporterUserId String
+  date           DateTime
+  reason         String?
+  status         String    @default("PENDING")
+  resolution     String?
+  resolvedAt     DateTime?
+  createdAt      DateTime  @default(now())
+
+  challenge    Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  reportedUser User      @relation("ReportedUser", fields: [reportedUserId], references: [id], onDelete: Cascade)
+  reporter     User      @relation("Reporter", fields: [reporterUserId], references: [id], onDelete: Cascade)
+
+  @@unique([challengeId, reporterUserId, reportedUserId, date])
+  @@index([challengeId, status])
+}
+
+model Penitencia {
+  id            String    @id @default(cuid())
+  userId        String
+  challengeId   String
+  type          String
+  reason        String
+  amount        Int?
+  incidentDate  DateTime?
+  generatedById String?
+  reportId      String?   @unique
+  status        String    @default("PENDING")
+  createdAt     DateTime  @default(now())
+  completedAt   DateTime?
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  generatedBy User?     @relation("PenitenciaGenerator", fields: [generatedById], references: [id], onDelete: SetNull)
+
+  @@index([userId, status])
+}
