@@ -31,9 +31,8 @@ const sections = [
 export function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-white">
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
+      <header className="mx-auto max-w-6xl px-6 py-6">
         <Logo />
-        <AuthButtons />
       </header>
 
       <main>
