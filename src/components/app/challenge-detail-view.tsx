@@ -142,7 +142,7 @@ export function ChallengeDetailView({
   return (
     <>
       <PoliceReportModalGate reportIds={pendingReportsAgainstUser} />
-      <div className="px-3 py-6 sm:px-4">
+      <div className="px-4 py-6">
       <article className="mb-4 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
         <div className="flex items-start gap-3">
           <ChallengeTypeIcon type={challenge.type} size="lg" />

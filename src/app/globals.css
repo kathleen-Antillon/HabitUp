@@ -40,6 +40,6 @@ body {
 
 @layer components {
   .app-page {
-    @apply w-full min-w-0 px-3 pb-6 pt-6 sm:px-4;
+    @apply w-full min-w-0 px-4 pb-6 pt-6;
   }
 }
