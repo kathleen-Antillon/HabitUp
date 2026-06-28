@@ -60,7 +60,7 @@ export function TopNav({ unreadCount = 0 }: { unreadCount?: number }) {
         visible ? "translate-y-0" : "-translate-y-full"
       )}
     >
-      <div className="mx-auto flex h-full w-full min-w-0 max-w-lg items-center justify-between px-4">
+      <div className="mx-auto flex h-full w-full min-w-0 max-w-lg items-center justify-between px-3 sm:px-4">
         <Link
           href="/app/home"
           className="flex items-center gap-2 font-bold text-emerald-700"

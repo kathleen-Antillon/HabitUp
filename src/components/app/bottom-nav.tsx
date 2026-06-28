@@ -38,7 +38,7 @@ export function BottomNav() {
 
   return (
     <>
-      <nav className="pointer-events-none fixed bottom-3 left-0 right-0 z-40 px-4 pb-safe sm:bottom-5 sm:px-5">
+      <nav className="pointer-events-none fixed bottom-3 left-0 right-0 z-40 px-3 pb-safe sm:bottom-5 sm:px-5">
         <div className="pointer-events-auto mx-auto flex w-full min-w-0 max-w-lg items-center gap-2 sm:gap-5">
           <div className="flex min-w-0 flex-1 items-stretch rounded-full border border-slate-200/70 bg-white/90 p-1 shadow-[0_8px_28px_rgba(15,23,42,0.1)] backdrop-blur-xl">
             {tabs.map((tab) => {
