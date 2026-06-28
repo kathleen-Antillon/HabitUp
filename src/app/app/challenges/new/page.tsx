@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { createChallengeAction } from "@/actions/challenges";
 import { ChallengeTypeSelector } from "@/components/app/challenge-type-selector";
+import { DateRangePicker } from "@/components/app/date-range-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,6 @@ import { formatDate } from "@/lib/utils";
 import { Plus, Trash2 } from "lucide-react";
 
 export default function NewChallengePage() {
-  const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [challengeType, setChallengeType] = useState<string | null>(null);
@@ -40,6 +39,10 @@ export default function NewChallengePage() {
       setError("Selecciona un tipo de reto.");
       return;
     }
+    if (!startDate || !endDate) {
+      setError("Selecciona las fechas de inicio y fin.");
+      return;
+    }
     setLoading(true);
     setError("");
 
@@ -56,12 +59,7 @@ export default function NewChallengePage() {
 
   return (
     <div className="px-4 py-6">
-      <div className="mb-6 flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={() => router.back()}>
-          ← Volver
-        </Button>
-        <h1 className="text-xl font-bold text-slate-900">Crear nuevo reto</h1>
-      </div>
+      <h1 className="mb-6 text-xl font-bold text-slate-900">Crear nuevo reto</h1>
 
       <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5">
         <div>
@@ -104,29 +102,16 @@ export default function NewChallengePage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label htmlFor="startDate">Fecha de inicio</Label>
-            <Input
-              id="startDate"
-              name="startDate"
-              type="date"
-              required
-              className="mt-1.5"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
-          </div>
-          <div>
-            <Label htmlFor="endDate">Fecha de fin</Label>
-            <Input
-              id="endDate"
-              name="endDate"
-              type="date"
-              required
-              className="mt-1.5"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+        <div>
+          <Label>Fechas del reto</Label>
+          <div className="mt-1.5">
+            <DateRangePicker
+              startDate={startDate}
+              endDate={endDate}
+              onChange={(start, end) => {
+                setStartDate(start);
+                setEndDate(end);
+              }}
             />
           </div>
         </div>
