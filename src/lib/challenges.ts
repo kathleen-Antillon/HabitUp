@@ -13,6 +13,35 @@ export type DayProgressSnapshot = {
 
 export type ProgressByDate = Record<string, DayProgressSnapshot>;
 
+export type ChallengeRankingMember = {
+  userId: string;
+  username: string;
+  completedDays: number;
+  memberStatus: string;
+};
+
+export function sortChallengeRanking<T extends ChallengeRankingMember>(
+  ranking: T[]
+): T[] {
+  const statusOrder = (status: string) => {
+    if (status === "ACTIVE") return 0;
+    if (status === "PENDING_JOIN") return 1;
+    if (status === "LEFT") return 2;
+    return 3;
+  };
+
+  return [...ranking].sort((a, b) => {
+    const orderDiff = statusOrder(a.memberStatus) - statusOrder(b.memberStatus);
+    if (orderDiff !== 0) return orderDiff;
+
+    if (b.completedDays !== a.completedDays) {
+      return b.completedDays - a.completedDays;
+    }
+
+    return a.username.localeCompare(b.username);
+  });
+}
+
 export type DailyGoalsMode = "FIXED" | "VARIABLE";
 
 export function getDailyGoalsForDate(
@@ -176,19 +205,12 @@ export async function getChallengeStats(userId: string, challengeId: string) {
       return [];
     });
 
-  const memberRanking = challenge.members
-    .map((m) => ({
-      userId: m.user.id,
-      username: m.user.username,
-      completedDays: completedDaysByUser[m.user.id] ?? 0,
-      memberStatus: m.status,
-    }))
-    .sort((a, b) => {
-      if (a.memberStatus !== b.memberStatus) {
-        return a.memberStatus === "ACTIVE" ? -1 : 1;
-      }
-      return b.completedDays - a.completedDays;
-    });
+  const memberRanking = challenge.members.map((m) => ({
+    userId: m.user.id,
+    username: m.user.username,
+    completedDays: completedDaysByUser[m.user.id] ?? 0,
+    memberStatus: m.status,
+  }));
 
   const pendingRanking = pendingJoinRequests.map((request) => ({
     userId: request.invitedUser.id,
@@ -197,7 +219,7 @@ export async function getChallengeStats(userId: string, challengeId: string) {
     memberStatus: "PENDING_JOIN",
   }));
 
-  const ranking = [...memberRanking, ...pendingRanking];
+  const ranking = sortChallengeRanking([...memberRanking, ...pendingRanking]);
 
   const userCompletedDays = completedDaysByUser[userId] ?? 0;
 
