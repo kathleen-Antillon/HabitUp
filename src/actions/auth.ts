@@ -49,19 +49,19 @@ export async function registerAction(formData: FormData): Promise<ActionResult> 
   await createSession(user.id);
 
   if (inviteCode) {
-    const challenge = await prisma.challenge.findUnique({ where: { inviteCode } });
+    const challenge = await prisma.challenge.findUnique({
+      where: { inviteCode },
+      select: { id: true },
+    });
     if (challenge) {
-      await prisma.challengeMember.create({
-        data: { userId: user.id, challengeId: challenge.id },
-      });
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { focusChallengeId: challenge.id, isNewUser: true },
-      });
+      const { buildChallengeInviteUrl } = await import("@/lib/join-requests");
+      return {
+        redirectTo: `${buildChallengeInviteUrl(challenge.id, inviteCode)}&welcome=1`,
+      };
     }
   }
 
-  redirect("/app/home?welcome=1");
+  return { redirectTo: "/app/home?welcome=1" };
 }
 
 export async function loginAction(formData: FormData): Promise<ActionResult> {
@@ -92,7 +92,25 @@ export async function loginAction(formData: FormData): Promise<ActionResult> {
   }
 
   await createSession(user.id);
-  redirect("/app/home");
+
+  const redirectParam = (formData.get("redirect") as string)?.trim();
+  const inviteCode = (formData.get("inviteCode") as string)?.trim() || null;
+
+  let redirectTo =
+    redirectParam && redirectParam.startsWith("/app") ? redirectParam : "/app/home";
+
+  if (inviteCode) {
+    const challenge = await prisma.challenge.findUnique({
+      where: { inviteCode },
+      select: { id: true },
+    });
+    if (challenge) {
+      const { buildChallengeInviteUrl } = await import("@/lib/join-requests");
+      redirectTo = buildChallengeInviteUrl(challenge.id, inviteCode);
+    }
+  }
+
+  return { redirectTo };
 }
 
 export async function logoutAction() {

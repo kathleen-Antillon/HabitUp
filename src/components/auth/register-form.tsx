@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { registerAction, type ActionResult } from "@/actions/auth";
 import { AuthDivider, GoogleSignInButton } from "@/components/auth/google-sign-in-button";
@@ -24,6 +25,12 @@ export function RegisterForm({ inviteCode }: { inviteCode?: string }) {
     async (_prev, formData) => registerAction(formData),
     undefined
   );
+
+  useEffect(() => {
+    if (state?.redirectTo) {
+      window.location.assign(state.redirectTo);
+    }
+  }, [state?.redirectTo]);
 
   return (
     <div className="mx-auto w-full max-w-md">
@@ -67,7 +74,10 @@ export function RegisterForm({ inviteCode }: { inviteCode?: string }) {
 
       <p className="mt-6 text-center text-sm text-slate-600">
         ¿Ya tienes cuenta?{" "}
-        <Link href="/login" className="font-medium text-emerald-600 hover:underline">
+        <Link
+          href={inviteCode ? `/login?invite=${inviteCode}` : "/login"}
+          className="font-medium text-emerald-600 hover:underline"
+        >
           Iniciar sesión
         </Link>
       </p>

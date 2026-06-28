@@ -4,6 +4,7 @@ import { Plus, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { joinChallengeAction } from "@/actions/challenges";
+import { markUserOnboarded } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,7 +19,8 @@ import { cn } from "@/lib/utils";
 type Props = {
   trigger: React.ReactNode;
   defaultOpen?: boolean;
-  onClose?: () => void;
+  onOpenChange?: (open: boolean) => void;
+  markOnboardedOnClose?: boolean;
 };
 
 type ActiveOption = "create" | "join";
@@ -26,15 +28,12 @@ type ActiveOption = "create" | "join";
 const boxBase =
   "flex w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 p-4 text-center transition-colors duration-200 min-[540px]:aspect-square min-[540px]:min-h-[240px] min-[540px]:p-6";
 
-const createBoxBase =
-  "min-h-[132px] min-[540px]:min-h-[240px]";
+const createBoxBase = "min-h-[132px] min-[540px]:min-h-[240px]";
 
 function boxStyles(active: boolean) {
   return cn(
     boxBase,
-    active
-      ? "border-emerald-200 bg-emerald-50"
-      : "border-slate-200 bg-slate-50"
+    active ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-slate-50"
   );
 }
 
@@ -54,7 +53,12 @@ function labelStyles(active: boolean, compact = false) {
   );
 }
 
-export function ChallengeActionModal({ trigger, defaultOpen = false, onClose }: Props) {
+export function ChallengeActionModal({
+  trigger,
+  defaultOpen = false,
+  onOpenChange,
+  markOnboardedOnClose = false,
+}: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(defaultOpen);
   const [activeOption, setActiveOption] = useState<ActiveOption>("create");
@@ -72,12 +76,15 @@ export function ChallengeActionModal({ trigger, defaultOpen = false, onClose }: 
 
   function handleOpenChange(value: boolean) {
     setOpen(value);
-    if (!value) onClose?.();
+    onOpenChange?.(value);
+    if (!value && markOnboardedOnClose) {
+      markUserOnboarded();
+    }
   }
 
   function handleCreate() {
     setActiveOption("create");
-    setOpen(false);
+    handleOpenChange(false);
     router.push("/app/challenges/new");
   }
 
@@ -94,8 +101,7 @@ export function ChallengeActionModal({ trigger, defaultOpen = false, onClose }: 
       return;
     }
 
-    setOpen(false);
-    onClose?.();
+    handleOpenChange(false);
     setLoading(false);
     if (result?.redirectTo) {
       router.push(result.redirectTo);
@@ -111,7 +117,9 @@ export function ChallengeActionModal({ trigger, defaultOpen = false, onClose }: 
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="w-[calc(100%-2rem)] max-w-3xl gap-6 p-8 sm:p-10">
         <DialogHeader>
-          <DialogTitle className="text-center text-xl min-[540px]:text-2xl">Añade un nuevo reto</DialogTitle>
+          <DialogTitle className="text-center text-xl min-[540px]:text-2xl">
+            Añade un nuevo reto
+          </DialogTitle>
         </DialogHeader>
 
         <div className="grid grid-cols-1 gap-5 min-[540px]:grid-cols-2">

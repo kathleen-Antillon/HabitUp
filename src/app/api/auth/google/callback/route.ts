@@ -1,11 +1,11 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { createSession } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import {
   exchangeGoogleCode,
   fetchGoogleUser,
   findOrCreateGoogleUser,
-  handleInviteForUser,
   isGoogleAuthConfigured,
 } from "@/lib/google-oauth";
 
@@ -56,11 +56,23 @@ export async function GET(request: Request) {
     }
 
     const { user, isNew } = await findOrCreateGoogleUser(profile);
-    await handleInviteForUser(user.id, invite);
     await createSession(user.id);
 
     if (redirectTo?.startsWith("/app")) {
       return NextResponse.redirect(new URL(redirectTo, origin));
+    }
+
+    if (invite) {
+      const challenge = await prisma.challenge.findUnique({
+        where: { inviteCode: invite },
+        select: { id: true },
+      });
+      if (challenge) {
+        const { buildChallengeInviteUrl } = await import("@/lib/join-requests");
+        const inviteUrl = buildChallengeInviteUrl(challenge.id, invite);
+        const welcomeSuffix = isNew || user.isNewUser ? "&welcome=1" : "";
+        return NextResponse.redirect(new URL(`${inviteUrl}${welcomeSuffix}`, origin));
+      }
     }
 
     if (isNew || user.isNewUser) {

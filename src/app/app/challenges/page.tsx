@@ -8,7 +8,9 @@ import { ChallengeActionModal } from "@/components/app/challenge-action-modal";
 import { AppPageTitle } from "@/components/app/app-page-title";
 import { ChallengeTypeIcon } from "@/components/app/challenge-type-icon";
 import { ClearAbandonedChallengesButton } from "@/components/app/clear-abandoned-challenges-button";
+import { PendingJoinRequestsBanner } from "@/components/app/pending-join-requests-banner";
 import { cn } from "@/lib/utils";
+import { getPendingJoinRequestsForUser } from "@/lib/join-requests";
 import { Plus } from "lucide-react";
 
 function ChallengeList({
@@ -113,7 +115,10 @@ export default async function ChallengesPage() {
   const session = await getSession();
   if (!session) redirect("/login");
 
-  const challenges = await getUserChallenges(session.id);
+  const [challenges, pendingJoinRequests] = await Promise.all([
+    getUserChallenges(session.id),
+    getPendingJoinRequestsForUser(session.id),
+  ]);
 
   const active = challenges.filter(
     (c) => c.status === "ACTIVE" && c.memberStatus === "ACTIVE"
@@ -123,6 +128,7 @@ export default async function ChallengesPage() {
     (c) => c.memberStatus === "LEFT" || c.status === "ABANDONED"
   );
 
+  const hasJoinRequests = pendingJoinRequests.length > 0;
   const isEmpty = challenges.length === 0;
 
   return (
@@ -149,6 +155,18 @@ export default async function ChallengesPage() {
             headerAction={<ClearAbandonedChallengesButton count={abandoned.length} />}
           />
         </>
+      )}
+
+      {hasJoinRequests && (
+        <section className="mt-8">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+            Solicitudes para unirse
+          </h2>
+          <PendingJoinRequestsBanner
+            requests={pendingJoinRequests}
+            className="space-y-3"
+          />
+        </section>
       )}
     </div>
   );

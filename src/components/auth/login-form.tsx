@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { loginAction, type ActionResult } from "@/actions/auth";
 import { AuthDivider, GoogleAuthError, GoogleSignInButton } from "@/components/auth/google-sign-in-button";
@@ -23,11 +24,18 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const googleError = searchParams.get("error") ?? undefined;
   const redirect = searchParams.get("redirect") ?? undefined;
+  const inviteCode = searchParams.get("invite") ?? undefined;
 
   const [state, formAction] = useFormState<ActionResult | undefined, FormData>(
     async (_prev, formData) => loginAction(formData),
     undefined
   );
+
+  useEffect(() => {
+    if (state?.redirectTo) {
+      window.location.assign(state.redirectTo);
+    }
+  }, [state?.redirectTo]);
 
   return (
     <div className="mx-auto w-full max-w-md">
@@ -38,21 +46,23 @@ export function LoginForm() {
       </div>
 
       <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <GoogleSignInButton redirect={redirect} />
+        <GoogleSignInButton inviteCode={inviteCode} redirect={redirect} />
         <AuthDivider />
 
         <form action={formAction} className="space-y-4">
-        <div>
-          <Label htmlFor="identifier">Usuario o correo</Label>
-          <Input id="identifier" name="identifier" required className="mt-1.5" placeholder="tu_usuario o email@ejemplo.com" />
-        </div>
-        <div>
-          <Label htmlFor="password">Contraseña</Label>
-          <Input id="password" name="password" type="password" required className="mt-1.5" />
-        </div>
-        {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
-        <GoogleAuthError code={googleError} />
-        <SubmitButton />
+          {redirect && <input type="hidden" name="redirect" value={redirect} />}
+          {inviteCode && <input type="hidden" name="inviteCode" value={inviteCode} />}
+          <div>
+            <Label htmlFor="identifier">Usuario o correo</Label>
+            <Input id="identifier" name="identifier" required className="mt-1.5" placeholder="tu_usuario o email@ejemplo.com" />
+          </div>
+          <div>
+            <Label htmlFor="password">Contraseña</Label>
+            <Input id="password" name="password" type="password" required className="mt-1.5" />
+          </div>
+          {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
+          <GoogleAuthError code={googleError} />
+          <SubmitButton />
         </form>
       </div>
 
@@ -64,7 +74,10 @@ export function LoginForm() {
         </p>
         <p className="text-slate-600">
           ¿No tienes cuenta?{" "}
-          <Link href="/register" className="font-medium text-emerald-600 hover:underline">
+          <Link
+            href={inviteCode ? `/register?invite=${inviteCode}` : "/register"}
+            className="font-medium text-emerald-600 hover:underline"
+          >
             Crear cuenta
           </Link>
         </p>

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { didMissAllGoalsYesterday } from "@/lib/challenges";
+import { notifyPenitenciaCreated } from "@/lib/notifications";
 import { startOfDay, toInputDate } from "@/lib/utils";
 
 export type PenitenciaView = {
@@ -48,7 +49,7 @@ export async function ensureMissedGoalsPenitencia(
 
   if (existing) return;
 
-  await prisma.penitencia.create({
+  const penitencia = await prisma.penitencia.create({
     data: {
       userId,
       challengeId,
@@ -58,6 +59,22 @@ export async function ensureMissedGoalsPenitencia(
       incidentDate: yesterday,
     },
   });
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { username: true },
+  });
+
+  if (user) {
+    await notifyPenitenciaCreated({
+      penitenciaId: penitencia.id,
+      userId,
+      username: user.username,
+      challengeId,
+      challengeName: challenge.name,
+      reason: penitencia.reason,
+    });
+  }
 }
 
 export async function createReportPenitencia(
@@ -84,17 +101,41 @@ export async function createReportPenitencia(
       "Se confirmó un reporte y fuiste expulsado del reto por incumplimiento.",
   };
 
-  await prisma.penitencia.create({
+  const reason = reasonByResolution[resolution];
+
+  const penitencia = await prisma.penitencia.create({
     data: {
       userId: reportedUserId,
       challengeId,
       type: "REPORT_UPHELD",
-      reason: reasonByResolution[resolution],
+      reason,
       incidentDate,
       generatedById: creatorId,
       reportId,
     },
   });
+
+  const [reportedUser, challenge] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: reportedUserId },
+      select: { username: true },
+    }),
+    prisma.challenge.findUnique({
+      where: { id: challengeId },
+      select: { name: true },
+    }),
+  ]);
+
+  if (reportedUser && challenge) {
+    await notifyPenitenciaCreated({
+      penitenciaId: penitencia.id,
+      userId: reportedUserId,
+      username: reportedUser.username,
+      challengeId,
+      challengeName: challenge.name,
+      reason,
+    });
+  }
 }
 
 export async function getUserPenitencias(userId: string): Promise<PenitenciaView[]> {

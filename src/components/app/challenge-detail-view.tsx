@@ -6,6 +6,7 @@ import { ChallengeCaughtSection } from "@/components/app/challenge-caught-sectio
 import { ChallengeGoalsTab } from "@/components/app/challenge-goals-tab";
 import { ChallengeHeaderEdit, ChallengeInfoEdit } from "@/components/app/challenge-info-edit";
 import { ChallengeInfoTab } from "@/components/app/challenge-info-tab";
+import { ChallengeInviteJoinButton } from "@/components/app/challenge-invite-join-button";
 import { ChallengeManageActions } from "@/components/app/challenge-manage-actions";
 import { ChallengeRankingList } from "@/components/app/challenge-ranking-list";
 import { ChallengeReportsTab } from "@/components/app/challenge-reports-tab";
@@ -47,6 +48,8 @@ type Props = {
   isCreator: boolean;
   isActiveMember: boolean;
   isLeft: boolean;
+  canRespondToInvite?: boolean;
+  pendingJoinRequestId?: string | null;
   completedGoalIds: string[];
   currentDay: number;
   totalDays: number;
@@ -91,6 +94,8 @@ export function ChallengeDetailView({
   isCreator,
   isActiveMember,
   isLeft,
+  canRespondToInvite = false,
+  pendingJoinRequestId = null,
   completedGoalIds,
   currentDay,
   totalDays,
@@ -162,7 +167,9 @@ export function ChallengeDetailView({
               <p className="mt-1 text-sm leading-snug text-slate-500">{displayDescription}</p>
             </div>
           )}
-          <ChallengeShareButton inviteCode={challenge.inviteCode} />
+          {(isActiveMember || isCreator) && (
+            <ChallengeShareButton inviteCode={challenge.inviteCode} />
+          )}
         </div>
         <div className="my-3 border-t border-slate-100" />
         <p className="text-sm text-slate-500">
@@ -172,6 +179,12 @@ export function ChallengeDetailView({
             {isCreator && " (tú)"}
           </span>
         </p>
+        {canRespondToInvite && (
+          <ChallengeInviteJoinButton
+            inviteCode={challenge.inviteCode}
+            pendingJoinRequestId={pendingJoinRequestId}
+          />
+        )}
       </article>
 
       <div className="mb-4 flex rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
@@ -247,7 +260,7 @@ export function ChallengeDetailView({
                 mainGoal={challenge.mainGoal}
                 startDate={challenge.startDate}
                 endDate={challenge.endDate}
-                isLeft={isLeft}
+                isLeft={isLeft && !canRespondToInvite}
                 inviteCode={challenge.inviteCode}
                 onEdit={isCreator ? () => setIsEditing(true) : undefined}
               />
@@ -275,7 +288,7 @@ export function ChallengeDetailView({
         </div>
       )}
 
-      {activeTab === "info" && (
+      {activeTab === "info" && !canRespondToInvite && (
         <ChallengeManageActions
           challengeId={challenge.id}
           challengeName={challenge.name}

@@ -6,7 +6,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { getDailyGoalsForDate } from "@/lib/challenges";
+import { createJoinRequestsForChallenge, findUserByIdentifier } from "@/lib/join-requests";
 import { createReportPenitencia } from "@/lib/penitencias";
+import { notifyAtrapadoSubmitted, notifyMemberJoined, notifyMemberLeft, notifyChallengeDeleted } from "@/lib/notifications";
 import { prisma } from "@/lib/db";
 import { startOfDay, parseInputDate } from "@/lib/utils";
 import type { ActionResult } from "./auth";
@@ -22,6 +24,7 @@ export async function createChallengeAction(formData: FormData): Promise<ActionR
   const startDateStr = formData.get("startDate") as string;
   const endDateStr = formData.get("endDate") as string;
   const dailyGoalsRaw = formData.get("dailyGoals") as string;
+  const invitedUsersRaw = formData.get("invitedUsers") as string;
 
   if (!name || !type || !description || !mainGoal || !startDateStr || !endDateStr) {
     return { error: "Completa todos los campos requeridos." };
@@ -37,6 +40,28 @@ export async function createChallengeAction(formData: FormData): Promise<ActionR
   const dailyGoals: string[] = dailyGoalsRaw
     ? JSON.parse(dailyGoalsRaw).filter((g: string) => g.trim())
     : [];
+
+  const invitedIdentifiers: string[] = invitedUsersRaw
+    ? JSON.parse(invitedUsersRaw).filter((v: string) => v.trim())
+    : [];
+
+  const uniqueInvites = [...new Set(invitedIdentifiers.map((v) => v.trim()).filter(Boolean))];
+  const inviteErrors: string[] = [];
+
+  for (const identifier of uniqueInvites) {
+    const user = await findUserByIdentifier(identifier);
+    if (!user) {
+      inviteErrors.push(`No encontramos una cuenta para "${identifier}".`);
+      continue;
+    }
+    if (user.id === session.id) {
+      inviteErrors.push(`No puedes invitarte a ti mismo (${user.username}).`);
+    }
+  }
+
+  if (inviteErrors.length > 0) {
+    return { error: inviteErrors.join(" ") };
+  }
 
   const inviteCode = nanoid(8);
 
@@ -63,6 +88,19 @@ export async function createChallengeAction(formData: FormData): Promise<ActionR
     where: { id: session.id },
     data: { focusChallengeId: challenge.id, isNewUser: false },
   });
+
+  if (uniqueInvites.length > 0) {
+    try {
+      await createJoinRequestsForChallenge(challenge.id, session.id, uniqueInvites);
+    } catch (error) {
+      console.error("[createChallenge] join requests failed", error);
+      return {
+        error:
+          "El reto se creó, pero hubo un problema al enviar las invitaciones. Reinicia el servidor (npm run dev) e inténtalo de nuevo.",
+        redirectTo: `/app/challenges/${challenge.id}`,
+      };
+    }
+  }
 
   redirect(`/app/challenges/${challenge.id}`);
 }
@@ -96,10 +134,30 @@ export async function joinChallengeAction(inviteCode: string): Promise<ActionRes
     });
   }
 
+  await prisma.challengeJoinRequest.updateMany({
+    where: {
+      challengeId: challenge.id,
+      invitedUserId: session.id,
+      status: "PENDING",
+    },
+    data: { status: "ACCEPTED", respondedAt: new Date() },
+  });
+
   await prisma.user.update({
     where: { id: session.id },
     data: { focusChallengeId: challenge.id, isNewUser: false },
   });
+
+  await notifyMemberJoined({
+    challengeId: challenge.id,
+    joinerId: session.id,
+    joinerUsername: session.username,
+  });
+
+  revalidatePath("/app/home");
+  revalidatePath("/app/challenges");
+  revalidatePath("/app/notifications");
+  revalidatePath(`/app/challenges/${challenge.id}`);
 
   return {
     success: "Te uniste al reto.",
@@ -353,6 +411,16 @@ export async function leaveChallengeAction(challengeId: string): Promise<ActionR
     });
   }
 
+  await notifyMemberLeft({
+    challengeId,
+    leaverId: session.id,
+    leaverUsername: session.username,
+  });
+
+  revalidatePath("/app/challenges");
+  revalidatePath("/app/home");
+  revalidatePath("/app/notifications");
+
   redirect("/app/challenges");
 }
 
@@ -402,7 +470,10 @@ export async function deleteChallengeAction(challengeId: string): Promise<Action
 
   const challenge = await prisma.challenge.findUnique({
     where: { id: challengeId },
-    select: { createdById: true },
+    include: {
+      members: { where: { status: "ACTIVE" }, select: { userId: true } },
+      createdBy: { select: { id: true, username: true } },
+    },
   });
 
   if (!challenge) return { error: "Reto no encontrado." };
@@ -411,12 +482,24 @@ export async function deleteChallengeAction(challengeId: string): Promise<Action
     return { error: "Solo quien creó el reto puede eliminarlo." };
   }
 
+  await notifyChallengeDeleted({
+    challengeId,
+    challengeName: challenge.name,
+    creatorId: session.id,
+    creatorUsername: challenge.createdBy.username,
+    memberUserIds: challenge.members.map((member) => member.userId),
+  });
+
   await prisma.user.updateMany({
     where: { focusChallengeId: challengeId },
     data: { focusChallengeId: null },
   });
 
   await prisma.challenge.delete({ where: { id: challengeId } });
+
+  revalidatePath("/app/challenges");
+  revalidatePath("/app/home");
+  revalidatePath("/app/notifications");
 
   redirect("/app/challenges");
 }
@@ -474,7 +557,7 @@ export async function submitAtrapadoReportAction(
 
     const challenge = await prisma.challenge.findUnique({
       where: { id: challengeId },
-      select: { startDate: true, endDate: true, createdById: true },
+      select: { startDate: true, endDate: true, createdById: true, name: true },
     });
 
     if (!challenge) return { error: "Reto no encontrado." };
@@ -504,7 +587,12 @@ export async function submitAtrapadoReportAction(
 
     const trimmedReason = reason?.trim() || null;
 
-    await prisma.goalReport.create({
+    const reportedUser = await prisma.user.findUnique({
+      where: { id: reportedUserId },
+      select: { username: true },
+    });
+
+    const report = await prisma.goalReport.create({
       data: {
         challengeId,
         reportedUserId,
@@ -514,7 +602,21 @@ export async function submitAtrapadoReportAction(
       },
     });
 
+    if (reportedUser) {
+      await notifyAtrapadoSubmitted({
+        reportId: report.id,
+        challengeId,
+        challengeName: challenge.name,
+        reporterId: session.id,
+        reporterUsername: session.username,
+        reportedUserId,
+        reportedUsername: reportedUser.username,
+        date,
+      });
+    }
+
     revalidatePath(`/app/challenges/${challengeId}`);
+    revalidatePath("/app/notifications");
     return { success: "Reporte enviado al creador del reto." };
   } catch (error) {
     if (

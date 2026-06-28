@@ -4,10 +4,10 @@ import { useState, useTransition } from "react";
 import { Eye } from "lucide-react";
 import { submitAtrapadoReportAction } from "@/actions/challenges";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SingleDatePicker } from "@/components/app/single-date-picker";
 import { Textarea } from "@/components/ui/textarea";
-import { toInputDate } from "@/lib/utils";
+import { startOfDay, toInputDate } from "@/lib/utils";
 
 type RankingMember = {
   userId: string;
@@ -36,10 +36,14 @@ export function ChallengeCaughtSection({
     (m) => m.memberStatus === "ACTIVE" && m.userId !== currentUserId
   );
 
-  const yesterday = toInputDate(new Date(Date.now() - 86400000));
-  const minDate = toInputDate(startDate);
-  const maxDate =
-    toInputDate(endDate) < yesterday ? toInputDate(endDate) : yesterday;
+  const today = startOfDay();
+  const yesterday = startOfDay(new Date(today.getTime() - 86400000));
+  const challengeStart = startOfDay(startDate);
+  const challengeEnd = startOfDay(endDate);
+  const maxReportable = challengeEnd < yesterday ? challengeEnd : yesterday;
+  const hasReportableDays = maxReportable >= challengeStart;
+  const minDate = toInputDate(challengeStart);
+  const maxDate = toInputDate(maxReportable);
 
   return (
     <div className="space-y-4">
@@ -56,13 +60,19 @@ export function ChallengeCaughtSection({
         </div>
       </div>
 
-      {isActiveMember && reportableMembers.length > 0 && (
+      {isActiveMember && reportableMembers.length > 0 && hasReportableDays && (
         <ReportForm
           challengeId={challengeId}
           members={reportableMembers}
           minDate={minDate}
           maxDate={maxDate}
         />
+      )}
+
+      {isActiveMember && reportableMembers.length > 0 && !hasReportableDays && (
+        <p className="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-500">
+          Aún no hay días anteriores disponibles para reportar en este reto.
+        </p>
       )}
 
       {isActiveMember && reportableMembers.length === 0 && (
@@ -144,15 +154,15 @@ function ReportForm({
         </select>
       </div>
 
-      <div className="space-y-2">
+      <div className="min-w-0 space-y-2">
         <Label htmlFor="caught-date">Día en cuestión</Label>
-        <Input
+        <SingleDatePicker
           id="caught-date"
-          type="date"
           value={date}
           min={minDate}
           max={maxDate}
-          onChange={(e) => setDate(e.target.value)}
+          onChange={setDate}
+          label="Día en cuestión"
           required
         />
       </div>

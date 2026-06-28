@@ -21,7 +21,7 @@ export function ChallengeTypeSelector({ value, onChange }: Props) {
   return (
     <div>
       <Label>Tipo de reto</Label>
-      <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         {CHALLENGE_TYPE_OPTIONS.map((type) => {
           const isSelected = value === type.value;
           const isDisabled = value !== null && !isSelected;

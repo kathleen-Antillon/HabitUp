@@ -163,7 +163,20 @@ export async function getChallengeStats(userId: string, challengeId: string) {
     return acc;
   }, {});
 
-  const ranking = challenge.members
+  const pendingJoinRequests = await prisma.challengeJoinRequest
+    .findMany({
+      where: { challengeId, status: "PENDING" },
+      include: {
+        invitedUser: { select: { id: true, username: true } },
+      },
+      orderBy: { createdAt: "asc" },
+    })
+    .catch((error) => {
+      console.error("[challenges] pending join requests query failed", error);
+      return [];
+    });
+
+  const memberRanking = challenge.members
     .map((m) => ({
       userId: m.user.id,
       username: m.user.username,
@@ -176,6 +189,15 @@ export async function getChallengeStats(userId: string, challengeId: string) {
       }
       return b.completedDays - a.completedDays;
     });
+
+  const pendingRanking = pendingJoinRequests.map((request) => ({
+    userId: request.invitedUser.id,
+    username: request.invitedUser.username,
+    completedDays: 0,
+    memberStatus: "PENDING_JOIN",
+  }));
+
+  const ranking = [...memberRanking, ...pendingRanking];
 
   const userCompletedDays = completedDaysByUser[userId] ?? 0;
 

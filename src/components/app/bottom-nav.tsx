@@ -1,10 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { Banknote, Home, Plus, Target } from "lucide-react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { ChallengeActionModal } from "./challenge-action-modal";
+
+const ChallengeActionModal = dynamic(
+  () => import("./challenge-action-modal").then((m) => m.ChallengeActionModal),
+  { ssr: false }
+);
 
 const tabs = [
   { href: "/app/home", label: "Home", icon: Home, match: (path: string) => path.startsWith("/app/home") },
@@ -24,6 +30,11 @@ const tabs = [
 
 export function BottomNav() {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <>
@@ -50,17 +61,27 @@ export function BottomNav() {
             })}
           </div>
 
-          <ChallengeActionModal
-            trigger={
-              <button
-                type="button"
-                className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white shadow-[0_8px_24px_rgba(5,150,105,0.35)] ring-4 ring-white/90 transition-transform hover:scale-105 active:scale-95"
-                aria-label="Crear o unirse a un reto"
-              >
-                <Plus className="h-6 w-6" strokeWidth={2.5} />
-              </button>
-            }
-          />
+          {mounted ? (
+            <ChallengeActionModal
+              trigger={
+                <button
+                  type="button"
+                  className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white shadow-[0_8px_24px_rgba(5,150,105,0.35)] ring-4 ring-white/90 transition-transform hover:scale-105 active:scale-95"
+                  aria-label="Crear o unirse a un reto"
+                >
+                  <Plus className="h-6 w-6" strokeWidth={2.5} />
+                </button>
+              }
+            />
+          ) : (
+            <button
+              type="button"
+              className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white shadow-[0_8px_24px_rgba(5,150,105,0.35)] ring-4 ring-white/90"
+              aria-label="Crear o unirse a un reto"
+            >
+              <Plus className="h-6 w-6" strokeWidth={2.5} />
+            </button>
+          )}
         </div>
       </nav>
       <div className="h-28" />

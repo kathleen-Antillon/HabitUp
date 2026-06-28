@@ -41,6 +41,11 @@ export async function getSession(): Promise<SessionUser | null> {
     },
   });
 
+  if (!user) {
+    cookieStore.delete(SESSION_COOKIE);
+    return null;
+  }
+
   return user;
 }
 

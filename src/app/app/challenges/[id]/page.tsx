@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { getAllGoalReportsForChallenge, getChallengeStats, getPendingReportIdsAgainstUser } from "@/lib/challenges";
+import { getPendingJoinRequestForUserAndChallenge } from "@/lib/join-requests";
 import { prisma } from "@/lib/db";
 import { ChallengeDetailView } from "@/components/app/challenge-detail-view";
 
@@ -9,7 +10,7 @@ export default async function ChallengeDetailPage({
   searchParams,
 }: {
   params: { id: string };
-  searchParams?: { tab?: string; open?: string };
+  searchParams?: { tab?: string; open?: string; invite?: string };
 }) {
   const session = await getSession();
   if (!session) redirect("/login");
@@ -28,6 +29,14 @@ export default async function ChallengeDetailPage({
   const isLeft = membership?.status === "LEFT";
   const isCreator = challenge.createdById === session.id;
   const isActiveMember = membership?.status === "ACTIVE";
+
+  const inviteCodeParam = searchParams?.invite?.trim();
+  const hasValidInviteLink = !!inviteCodeParam && inviteCodeParam === challenge.inviteCode;
+  const pendingJoinRequest = !isActiveMember
+    ? await getPendingJoinRequestForUserAndChallenge(session.id, params.id)
+    : null;
+  const canRespondToInvite =
+    !isActiveMember && !isCreator && (hasValidInviteLink || pendingJoinRequest !== null);
 
   const completedGoalIds: string[] = todayProgress
     ? JSON.parse(todayProgress.completedGoalIds)
@@ -69,6 +78,8 @@ export default async function ChallengeDetailPage({
       isCreator={isCreator}
       isActiveMember={isActiveMember}
       isLeft={isLeft}
+      canRespondToInvite={canRespondToInvite}
+      pendingJoinRequestId={pendingJoinRequest?.id ?? null}
       completedGoalIds={completedGoalIds}
       currentDay={currentDay}
       totalDays={totalDays}
