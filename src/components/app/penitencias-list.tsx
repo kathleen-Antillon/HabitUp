@@ -10,7 +10,7 @@ import {
   getPenitenciaTypeLabel,
 } from "@/lib/penitencias";
 import { cn } from "@/lib/utils";
-import { Plus } from "lucide-react";
+import { PartyPopper } from "lucide-react";
 
 function formatDateLabel(dateStr: string) {
   const [year, month, day] = dateStr.split("-").map(Number);
@@ -121,8 +121,8 @@ export function PenitenciasList({ penitencias }: { penitencias: PenitenciaView[]
   if (penitencias.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-14 text-center">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
-          <Plus className="h-8 w-8 text-emerald-600" />
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
+          <PartyPopper className="h-8 w-8 text-amber-600" />
         </div>
         <p className="text-lg font-semibold text-slate-900">Sin penitencias</p>
         <p className="mt-2 max-w-xs text-sm text-slate-500">
