@@ -9,7 +9,7 @@ import { AppPageTitle } from "@/components/app/app-page-title";
 import { ChallengeTypeIcon } from "@/components/app/challenge-type-icon";
 import { ClearAbandonedChallengesButton } from "@/components/app/clear-abandoned-challenges-button";
 import { cn } from "@/lib/utils";
-import { Target } from "lucide-react";
+import { Plus } from "lucide-react";
 
 function ChallengeList({
   title,
@@ -131,8 +131,8 @@ export default async function ChallengesPage() {
 
       {isEmpty ? (
         <div className="flex flex-col items-center py-16 text-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
-            <Target className="h-8 w-8 text-slate-400" />
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
+            <Plus className="h-8 w-8 text-emerald-600" />
           </div>
           <p className="mb-4 text-slate-600">No tienes retos todavía</p>
           <ChallengeActionModal trigger={<Button>Crear o unirse a un reto</Button>} />

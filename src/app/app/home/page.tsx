@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ChallengeActionModal } from "@/components/app/challenge-action-modal";
 import { AppPageTitle } from "@/components/app/app-page-title";
 import { HomeChallengeCard } from "@/components/app/home-challenge-card";
-import { Target } from "lucide-react";
+import { Plus } from "lucide-react";
 
 async function getChallengeWithStats(userId: string, challengeId: string) {
   const stats = await getChallengeStats(userId, challengeId);
@@ -62,7 +62,7 @@ export default async function HomePage({
           <AppPageTitle>Home</AppPageTitle>
           <div className="flex flex-col items-center justify-center py-14 text-center">
             <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
-              <Target className="h-10 w-10 text-emerald-600" />
+              <Plus className="h-10 w-10 text-emerald-600" />
             </div>
             <h1 className="mb-2 text-2xl font-bold text-slate-900">Aún no tienes retos</h1>
             <p className="mb-8 max-w-sm text-slate-600">
