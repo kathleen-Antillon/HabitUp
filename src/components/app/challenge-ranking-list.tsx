@@ -22,7 +22,7 @@ function RankingRow({
   return (
     <li
       className={cn(
-        "flex items-center justify-between rounded-xl px-4 py-3",
+        "flex min-w-0 items-center justify-between gap-3 rounded-xl px-3 py-3 sm:px-4",
         isAbandoned
           ? "bg-red-50"
           : isPendingJoin
@@ -30,10 +30,10 @@ function RankingRow({
             : "bg-slate-50"
       )}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
         <span
           className={cn(
-            "flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold",
+            "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold",
             isAbandoned
               ? "bg-red-100 text-red-700"
               : isPendingJoin
@@ -43,7 +43,7 @@ function RankingRow({
         >
           {isPendingJoin ? "…" : position ?? "—"}
         </span>
-        <span className="font-medium text-slate-900">
+        <span className="min-w-0 truncate font-medium text-slate-900">
           {member.username}
           {member.userId === currentUserId && (
             <span className="ml-1 text-xs text-slate-500">(tú)</span>
@@ -51,11 +51,15 @@ function RankingRow({
         </span>
       </div>
       {isAbandoned ? (
-        <span className="text-sm font-semibold text-red-600">Loser por abandono</span>
+        <span className="shrink-0 text-right text-xs font-semibold text-red-600 sm:text-sm">
+          Loser por abandono
+        </span>
       ) : isPendingJoin ? (
-        <span className="text-sm font-semibold text-amber-700">Pendiente por unirse</span>
+        <span className="shrink-0 text-right text-xs font-semibold text-amber-700 sm:text-sm">
+          Pendiente por unirse
+        </span>
       ) : (
-        <span className="text-sm font-semibold text-emerald-600">
+        <span className="shrink-0 text-sm font-semibold text-emerald-600">
           {member.completedDays} días
         </span>
       )}

@@ -15,7 +15,7 @@ export default async function NotificationsPage() {
   const hasUnread = notifications.some((notification) => !notification.readAt);
 
   return (
-    <div className="px-4 pb-6 pt-6">
+    <div className="app-page">
       <div className="mb-6 flex items-start justify-between gap-3">
         <AppPageTitle>Notificaciones</AppPageTitle>
         <MarkAllNotificationsReadButton hasUnread={hasUnread} />

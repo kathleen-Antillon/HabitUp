@@ -93,7 +93,7 @@ export default function NewChallengePage() {
   }
 
   return (
-    <div className="px-4 py-6">
+    <div className="app-page py-6">
       <h1 className="mb-6 text-xl font-bold text-slate-900">Crear nuevo reto</h1>
 
       <form

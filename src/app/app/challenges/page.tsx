@@ -132,7 +132,7 @@ export default async function ChallengesPage() {
   const isEmpty = challenges.length === 0;
 
   return (
-    <div className="px-4 pb-6 pt-6">
+    <div className="app-page">
       <AppPageTitle>Retos</AppPageTitle>
 
       {isEmpty ? (

@@ -17,7 +17,7 @@ export default async function JoinPage({
 
   if (!challenge) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-6">
+      <div className="flex min-h-dvh w-full min-w-0 items-center justify-center px-4 sm:px-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-slate-900">Invitación inválida</h1>
           <p className="mt-2 text-slate-600">Este link de invitación no existe o expiró.</p>

@@ -56,11 +56,11 @@ export function TopNav({ unreadCount = 0 }: { unreadCount?: number }) {
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-40 h-14 border-b border-slate-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 transition-transform duration-300 ease-in-out",
+        "fixed top-0 left-0 right-0 z-40 h-14 border-b border-slate-200 bg-white/95 pt-safe backdrop-blur supports-[backdrop-filter]:bg-white/80 transition-transform duration-300 ease-in-out",
         visible ? "translate-y-0" : "-translate-y-full"
       )}
     >
-      <div className="mx-auto flex h-full max-w-lg items-center justify-between px-4">
+      <div className="mx-auto flex h-full w-full min-w-0 max-w-lg items-center justify-between px-3 sm:px-4">
         <Link
           href="/app/home"
           className="flex items-center gap-2 font-bold text-emerald-700"

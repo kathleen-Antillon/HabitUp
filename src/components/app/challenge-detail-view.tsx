@@ -142,8 +142,8 @@ export function ChallengeDetailView({
   return (
     <>
       <PoliceReportModalGate reportIds={pendingReportsAgainstUser} />
-      <div className="px-4 py-6">
-      <article className="mb-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="px-3 py-6 sm:px-4">
+      <article className="mb-4 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
         <div className="flex items-start gap-3">
           <ChallengeTypeIcon type={challenge.type} size="lg" />
           {isCreator && isEditing ? (
@@ -157,8 +157,12 @@ export function ChallengeDetailView({
             />
           ) : (
             <div className="min-w-0 flex-1">
-              <h1 className="text-lg font-bold leading-tight text-slate-900">{displayName}</h1>
-              <p className="mt-1 text-sm leading-snug text-slate-500">{displayDescription}</p>
+              <h1 className="break-words text-lg font-bold leading-tight text-slate-900">
+                {displayName}
+              </h1>
+              <p className="mt-1 break-words text-sm leading-snug text-slate-500">
+                {displayDescription}
+              </p>
             </div>
           )}
           {(isActiveMember || isCreator) && (
@@ -191,14 +195,14 @@ export function ChallengeDetailView({
               type="button"
               onClick={() => handleTabChange(tab.id)}
               className={cn(
-                "relative flex flex-1 flex-col items-center gap-1 rounded-xl px-1 py-2.5 text-xs font-semibold transition-colors",
+                "relative flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[10px] font-semibold transition-colors min-[380px]:px-1 min-[380px]:py-2.5 min-[380px]:text-xs",
                 isActive
                   ? "bg-emerald-50 text-emerald-700"
                   : "text-slate-500 hover:text-slate-700"
               )}
             >
-              <Icon className="h-4 w-4" strokeWidth={2} />
-              {tab.label}
+              <Icon className="h-4 w-4 shrink-0" strokeWidth={2} />
+              <span className="truncate">{tab.label}</span>
               {tab.id === "reports" && pendingReportCount > 0 && (
                 <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
                   {pendingReportCount}

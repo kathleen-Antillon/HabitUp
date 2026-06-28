@@ -3,7 +3,7 @@ import { Suspense } from "react";
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-emerald-50 to-white px-6 py-12">
+    <div className="flex min-h-dvh w-full min-w-0 items-center justify-center bg-gradient-to-b from-emerald-50 to-white px-4 py-10 sm:px-6 sm:py-12">
       <Suspense>
         <LoginForm />
       </Suspense>

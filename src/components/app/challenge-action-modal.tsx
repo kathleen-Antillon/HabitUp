@@ -115,7 +115,7 @@ export function ChallengeActionModal({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="w-[calc(100%-2rem)] max-w-3xl gap-6 p-8 sm:p-10">
+      <DialogContent className="w-[calc(100%-1.5rem)] max-w-3xl gap-4 p-5 sm:gap-6 sm:p-8 md:p-10">
         <DialogHeader>
           <DialogTitle className="text-center text-xl min-[540px]:text-2xl">
             Añade un nuevo reto

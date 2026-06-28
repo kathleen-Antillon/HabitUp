@@ -81,7 +81,7 @@ export default async function HomePage({
             streak={0}
             policeReportIds={[]}
           />
-        <div className="px-4 pb-6 pt-6">
+        <div className="app-page">
           <AppPageTitle>Home</AppPageTitle>
           <PendingJoinRequestsBanner requests={pendingJoinRequests} />
           <div className="flex flex-col items-center justify-center py-14 text-center">
@@ -109,7 +109,7 @@ export default async function HomePage({
           streak={focusStats?.streak ?? 0}
           policeReportIds={policeReportIds}
         />
-        <div className="px-4 pb-6 pt-6">
+        <div className="app-page">
           <AppPageTitle>Home</AppPageTitle>
           <PendingJoinRequestsBanner requests={pendingJoinRequests} />
 

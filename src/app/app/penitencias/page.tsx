@@ -11,7 +11,7 @@ export default async function PenitenciasPage() {
   const penitencias = await getUserPenitencias(session.id);
 
   return (
-    <div className="px-4 pb-6 pt-6">
+    <div className="app-page">
       <AppPageTitle>Penitencias</AppPageTitle>
       <p className="mb-6 text-sm text-slate-500">
         Castigos y cargos recibidos en tus retos. Marca como cumplida cada penitencia cuando la

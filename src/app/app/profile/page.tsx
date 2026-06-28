@@ -12,7 +12,7 @@ export default async function ProfilePage() {
   if (!profile) redirect("/login");
 
   return (
-    <div className="px-4 pb-6 pt-6">
+    <div className="app-page">
       <AppPageTitle>Perfil</AppPageTitle>
       <ProfileClient profile={profile} />
     </div>

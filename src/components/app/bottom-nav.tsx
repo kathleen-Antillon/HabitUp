@@ -38,9 +38,9 @@ export function BottomNav() {
 
   return (
     <>
-      <nav className="pointer-events-none fixed bottom-5 left-0 right-0 z-40 px-5 pb-safe">
-        <div className="pointer-events-auto mx-auto flex max-w-lg items-center gap-5">
-          <div className="flex flex-1 items-stretch rounded-full border border-slate-200/70 bg-white/90 p-1 shadow-[0_8px_28px_rgba(15,23,42,0.1)] backdrop-blur-xl">
+      <nav className="pointer-events-none fixed bottom-3 left-0 right-0 z-40 px-3 pb-safe sm:bottom-5 sm:px-5">
+        <div className="pointer-events-auto mx-auto flex w-full min-w-0 max-w-lg items-center gap-2 sm:gap-5">
+          <div className="flex min-w-0 flex-1 items-stretch rounded-full border border-slate-200/70 bg-white/90 p-1 shadow-[0_8px_28px_rgba(15,23,42,0.1)] backdrop-blur-xl">
             {tabs.map((tab) => {
               const active = tab.match(pathname);
               return (
@@ -48,14 +48,14 @@ export function BottomNav() {
                   key={tab.href}
                   href={tab.href}
                   className={cn(
-                    "flex flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-2 py-2 text-[11px] font-semibold transition-all duration-200",
+                    "flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-1 py-2 text-[10px] font-semibold transition-all duration-200 min-[380px]:px-2 min-[380px]:text-[11px]",
                     active
                       ? "bg-emerald-100 text-emerald-700 shadow-sm"
                       : "text-slate-500 hover:text-slate-800"
                   )}
                 >
-                  <tab.icon className={cn("h-4 w-4", active && "stroke-[2.5]")} />
-                  {tab.label}
+                  <tab.icon className={cn("h-4 w-4 shrink-0", active && "stroke-[2.5]")} />
+                  <span className="truncate">{tab.label}</span>
                 </Link>
               );
             })}
@@ -66,25 +66,25 @@ export function BottomNav() {
               trigger={
                 <button
                   type="button"
-                  className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white shadow-[0_8px_24px_rgba(5,150,105,0.35)] ring-4 ring-white/90 transition-transform hover:scale-105 active:scale-95"
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white shadow-[0_8px_24px_rgba(5,150,105,0.35)] ring-4 ring-white/90 transition-transform hover:scale-105 active:scale-95 sm:h-[52px] sm:w-[52px]"
                   aria-label="Crear o unirse a un reto"
                 >
-                  <Plus className="h-6 w-6" strokeWidth={2.5} />
+                  <Plus className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.5} />
                 </button>
               }
             />
           ) : (
             <button
               type="button"
-              className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white shadow-[0_8px_24px_rgba(5,150,105,0.35)] ring-4 ring-white/90"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white shadow-[0_8px_24px_rgba(5,150,105,0.35)] ring-4 ring-white/90 sm:h-[52px] sm:w-[52px]"
               aria-label="Crear o unirse a un reto"
             >
-              <Plus className="h-6 w-6" strokeWidth={2.5} />
+              <Plus className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.5} />
             </button>
           )}
         </div>
       </nav>
-      <div className="h-28" />
+      <div className="h-24 pb-safe sm:h-28" />
     </>
   );
 }

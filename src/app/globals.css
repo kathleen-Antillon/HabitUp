@@ -7,13 +7,39 @@
   --foreground: #0f172a;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  overflow-x: clip;
+}
+
 body {
   color: var(--foreground);
   background: var(--background);
+  overflow-x: clip;
+  min-height: 100dvh;
 }
 
 @layer utilities {
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .px-safe {
+    padding-left: max(0px, env(safe-area-inset-left, 0px));
+    padding-right: max(0px, env(safe-area-inset-right, 0px));
+  }
+
+  .min-h-dvh {
+    min-height: 100dvh;
+  }
+}
+
+@layer components {
+  .app-page {
+    @apply w-full min-w-0 px-3 pb-6 pt-6 sm:px-4;
   }
 }

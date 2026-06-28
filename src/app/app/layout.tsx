@@ -8,9 +8,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const unreadCount = session ? await getUnreadNotificationCount(session.id) : 0;
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-dvh w-full min-w-0 overflow-x-clip bg-slate-50">
       <TopNav unreadCount={unreadCount} />
-      <div className="mx-auto min-h-screen max-w-lg pt-14">{children}</div>
+      <main className="mx-auto w-full min-w-0 max-w-lg pt-14">{children}</main>
       <BottomNav />
     </div>
   );
