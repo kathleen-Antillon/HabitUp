@@ -23,7 +23,7 @@ export default async function DailyGoalsPage({
   return (
     <div className="px-4 py-6">
       <div className="mb-6 flex items-center gap-3">
-        <Button variant="ghost" size="sm" asChild>
+        <Button variant="link" size="sm" asChild>
           <Link href="/app/home">← Volver</Link>
         </Button>
         <div>

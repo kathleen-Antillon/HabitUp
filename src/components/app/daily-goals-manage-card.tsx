@@ -4,6 +4,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { updateDailyGoalsAction } from "@/actions/challenges";
+import { outlineButtonClass, primaryButtonClass } from "@/components/landing/auth-buttons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -112,7 +113,7 @@ export function DailyGoalsManageCard({
           <Button
             type="button"
             variant="outline"
-            className="mt-4 h-11 w-full rounded-xl border-emerald-600 bg-white text-emerald-600 hover:border-emerald-600 hover:bg-emerald-600 hover:text-white"
+            className={`mt-4 w-full ${outlineButtonClass}`}
             onClick={openEditor}
           >
             Gestionar objetivos
@@ -152,7 +153,7 @@ export function DailyGoalsManageCard({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="rounded-xl"
+                className={outlineButtonClass}
                 onClick={addGoal}
               >
                 <Plus className="mr-1 h-4 w-4" />
@@ -164,7 +165,7 @@ export function DailyGoalsManageCard({
               <Button
                 type="button"
                 variant="outline"
-                className="h-11 flex-1 rounded-xl"
+                className={`flex-1 ${outlineButtonClass}`}
                 onClick={handleCancel}
                 disabled={loading}
               >
@@ -172,7 +173,7 @@ export function DailyGoalsManageCard({
               </Button>
               <Button
                 type="button"
-                className="h-11 flex-1 rounded-xl"
+                className={`flex-1 ${primaryButtonClass}`}
                 onClick={handleSave}
                 disabled={loading}
               >
@@ -181,7 +182,7 @@ export function DailyGoalsManageCard({
             </div>
 
             {error && <p className="text-sm text-red-600">{error}</p>}
-            {message && <p className="text-sm text-emerald-600">{message}</p>}
+            {message && <p className="text-sm text-slate-700">{message}</p>}
           </div>
         </>
       )}

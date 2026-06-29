@@ -10,7 +10,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-dvh w-full min-w-0 overflow-x-clip bg-slate-50">
       <TopNav unreadCount={unreadCount} />
-      <main className="mx-auto w-full min-w-0 max-w-lg pt-14">{children}</main>
+      <main className="main-offset-top mx-auto w-full min-w-0 max-w-lg">{children}</main>
       <BottomNav />
     </div>
   );

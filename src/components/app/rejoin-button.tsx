@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { joinChallengeAction } from "@/actions/challenges";
+import { primaryButtonClass } from "@/components/landing/auth-buttons";
 import { Button } from "@/components/ui/button";
 
 export function RejoinButton({ inviteCode }: { inviteCode: string }) {
@@ -20,7 +21,7 @@ export function RejoinButton({ inviteCode }: { inviteCode: string }) {
   }
 
   return (
-    <Button onClick={handleRejoin} disabled={loading} className="mb-4 w-full">
+    <Button onClick={handleRejoin} disabled={loading} className={`mb-4 w-full ${primaryButtonClass}`}>
       {loading ? "Uniéndose..." : "Unirse de nuevo al reto"}
     </Button>
   );

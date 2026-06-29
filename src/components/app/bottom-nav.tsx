@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { Banknote, Home, Plus, Target } from "lucide-react";
 import { useEffect, useState } from "react";
+import { fabButtonClass, navActiveClass } from "@/lib/brand-colors";
 import { cn } from "@/lib/utils";
 
 const ChallengeActionModal = dynamic(
@@ -50,8 +51,8 @@ export function BottomNav() {
                   className={cn(
                     "flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-1 py-2 text-[10px] font-semibold transition-all duration-200 min-[380px]:px-2 min-[380px]:text-[11px]",
                     active
-                      ? "bg-emerald-100 text-emerald-700 shadow-sm"
-                      : "text-slate-500 hover:text-slate-800"
+                      ? navActiveClass
+                      : "text-slate-500 hover:bg-[#F8FAFC] hover:text-[#334155]"
                   )}
                 >
                   <tab.icon className={cn("h-4 w-4 shrink-0", active && "stroke-[2.5]")} />
@@ -66,7 +67,10 @@ export function BottomNav() {
               trigger={
                 <button
                   type="button"
-                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white shadow-[0_8px_24px_rgba(5,150,105,0.35)] ring-4 ring-white/90 transition-transform hover:scale-105 active:scale-95 sm:h-[52px] sm:w-[52px]"
+                  className={cn(
+                    "flex h-12 w-12 shrink-0 items-center justify-center rounded-full ring-4 ring-white/90 transition-all duration-200 ease-out sm:h-[52px] sm:w-[52px]",
+                    fabButtonClass
+                  )}
                   aria-label="Crear o unirse a un reto"
                 >
                   <Plus className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.5} />
@@ -76,7 +80,10 @@ export function BottomNav() {
           ) : (
             <button
               type="button"
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white shadow-[0_8px_24px_rgba(5,150,105,0.35)] ring-4 ring-white/90 sm:h-[52px] sm:w-[52px]"
+              className={cn(
+                "flex h-12 w-12 shrink-0 items-center justify-center rounded-full ring-4 ring-white/90 transition-all duration-200 ease-out sm:h-[52px] sm:w-[52px]",
+                fabButtonClass
+              )}
               aria-label="Crear o unirse a un reto"
             >
               <Plus className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.5} />

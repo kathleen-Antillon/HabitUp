@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Copy, Link2 } from "lucide-react";
+import { outlineButtonClass } from "@/components/landing/auth-buttons";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -41,7 +42,7 @@ export function ChallengeShareButton({ inviteCode }: { inviteCode: string }) {
           type="button"
           variant="outline"
           size="sm"
-          className="shrink-0 rounded-xl"
+          className={`shrink-0 ${outlineButtonClass}`}
         >
           Compartir
         </Button>
@@ -57,7 +58,7 @@ export function ChallengeShareButton({ inviteCode }: { inviteCode: string }) {
         <div className="space-y-4">
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <div className="mb-2 flex items-center gap-2">
-              <Link2 className="h-4 w-4 text-emerald-600" />
+              <Link2 className="h-4 w-4 text-slate-800" />
               <p className="text-sm font-medium text-slate-900">Link de invitación</p>
             </div>
             <p className="mb-3 break-all rounded-lg bg-white px-3 py-2 text-xs text-slate-600">
@@ -71,7 +72,7 @@ export function ChallengeShareButton({ inviteCode }: { inviteCode: string }) {
 
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <div className="mb-2 flex items-center gap-2">
-              <Copy className="h-4 w-4 text-emerald-600" />
+              <Copy className="h-4 w-4 text-slate-800" />
               <p className="text-sm font-medium text-slate-900">Código de invitación</p>
             </div>
             <p className="mb-3 rounded-lg bg-white px-3 py-2 text-center font-mono text-lg font-semibold tracking-widest text-slate-900">

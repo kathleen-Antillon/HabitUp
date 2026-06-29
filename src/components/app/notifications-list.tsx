@@ -18,6 +18,7 @@ import {
   type NotificationView,
 } from "@/lib/notifications";
 import { cn } from "@/lib/utils";
+import { linkButtonClass } from "@/lib/link-button";
 
 function NotificationIcon({ type }: { type: NotificationView["type"] }) {
   const className = "h-5 w-5";
@@ -183,7 +184,7 @@ export function MarkAllNotificationsReadButton({
       type="button"
       onClick={handleClick}
       disabled={pending}
-      className="text-sm font-medium text-emerald-600 transition-colors hover:text-emerald-700 disabled:opacity-50"
+      className={cn("text-sm", linkButtonClass)}
     >
       {pending ? "Marcando..." : "Marcar todas como leídas"}
     </button>

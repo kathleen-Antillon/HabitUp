@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { setFocusChallengeAction } from "@/actions/challenges";
 import { cn } from "@/lib/utils";
+import { linkButtonClass } from "@/lib/link-button";
 
 export function PinChallengeButton({
   challengeId,
@@ -29,10 +30,7 @@ export function PinChallengeButton({
       type="button"
       onClick={handlePin}
       disabled={loading}
-      className={cn(
-        "text-sm font-medium text-emerald-600 transition-colors hover:text-emerald-700 disabled:opacity-50",
-        className
-      )}
+      className={cn(linkButtonClass, "text-xs", className)}
     >
       {loading ? "Convirtiendo..." : "Convertir en reto principal"}
     </button>

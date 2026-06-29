@@ -5,6 +5,7 @@ import { createChallengeAction } from "@/actions/challenges";
 import { ChallengeTypeSelector } from "@/components/app/challenge-type-selector";
 import { DateRangePicker } from "@/components/app/date-range-picker";
 import { InviteParticipantsField } from "@/components/app/invite-participants-field";
+import { primaryButtonClass } from "@/components/landing/auth-buttons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -201,7 +202,7 @@ export default function NewChallengePage() {
         <div className="space-y-4 border-t border-slate-200 px-6 pb-7 pt-8">
           {error && <p className="text-sm text-red-600">{error}</p>}
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className={`w-full ${primaryButtonClass}`} disabled={loading}>
             {loading ? "Creando reto..." : "Crear reto"}
           </Button>
         </div>

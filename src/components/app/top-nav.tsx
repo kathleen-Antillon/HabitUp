@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { navActiveClass } from "@/lib/brand-colors";
 import { cn } from "@/lib/utils";
 
 function shouldShowTopNav(pathname: string): boolean {
@@ -56,16 +57,16 @@ export function TopNav({ unreadCount = 0 }: { unreadCount?: number }) {
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-40 h-14 border-b border-slate-200 bg-white/95 pt-safe backdrop-blur supports-[backdrop-filter]:bg-white/80 transition-transform duration-300 ease-in-out",
+        "fixed top-0 left-0 right-0 z-40 border-b border-slate-200 bg-white/95 pt-safe backdrop-blur supports-[backdrop-filter]:bg-white/80 transition-transform duration-300 ease-in-out",
         visible ? "translate-y-0" : "-translate-y-full"
       )}
     >
-      <div className="mx-auto flex h-full w-full min-w-0 max-w-lg items-center justify-between px-3 sm:px-4">
+      <div className="mx-auto flex h-14 w-full min-w-0 max-w-lg items-center justify-between px-3 sm:px-4">
         <Link
           href="/app/home"
-          className="flex items-center gap-2 font-bold text-emerald-700"
+          className="flex items-center gap-2 font-bold text-slate-800"
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-600 text-sm text-white">
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-800 text-sm text-white">
             H
           </span>
           <span className="text-base tracking-tight sm:text-lg">HabitUp</span>
@@ -77,8 +78,8 @@ export function TopNav({ unreadCount = 0 }: { unreadCount?: number }) {
             className={cn(
               "relative flex h-9 w-9 items-center justify-center rounded-full transition-colors",
               pathname.startsWith("/app/notifications")
-                ? "bg-emerald-100 text-emerald-700"
-                : "bg-slate-100 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
+                ? navActiveClass
+                : "bg-[#F8FAFC] text-[#64748B] hover:bg-[#94A98F]/15 hover:text-[#334155]"
             )}
             aria-label="Notificaciones"
           >
@@ -93,8 +94,8 @@ export function TopNav({ unreadCount = 0 }: { unreadCount?: number }) {
             className={cn(
               "flex h-9 w-9 items-center justify-center rounded-full transition-colors",
               pathname.startsWith("/app/profile")
-                ? "bg-emerald-100 text-emerald-700"
-                : "bg-slate-100 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
+                ? navActiveClass
+                : "bg-[#F8FAFC] text-[#64748B] hover:bg-[#94A98F]/15 hover:text-[#334155]"
             )}
             aria-label="Ir a perfil"
           >

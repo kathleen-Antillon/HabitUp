@@ -14,6 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { focusRingClass } from "@/lib/brand-colors";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -33,7 +34,9 @@ const createBoxBase = "min-h-[132px] min-[540px]:min-h-[240px]";
 function boxStyles(active: boolean) {
   return cn(
     boxBase,
-    active ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-slate-50"
+    active
+      ? "border-[#E07A5F]/35 bg-[#E07A5F]/8"
+      : "border-slate-200 bg-slate-50"
   );
 }
 
@@ -41,7 +44,7 @@ function iconStyles(active: boolean, compact = false) {
   return cn(
     "flex items-center justify-center rounded-2xl transition-colors duration-200",
     compact ? "h-12 w-12 min-[540px]:h-16 min-[540px]:w-16" : "h-16 w-16",
-    active ? "bg-emerald-600 text-white" : "bg-slate-200 text-slate-700"
+    active ? "bg-[#E07A5F] text-white" : "bg-slate-200 text-slate-700"
   );
 }
 
@@ -49,7 +52,7 @@ function labelStyles(active: boolean, compact = false) {
   return cn(
     "whitespace-nowrap font-semibold transition-colors duration-200",
     compact ? "text-sm min-[540px]:text-base" : "text-base",
-    active ? "text-emerald-900" : "text-slate-900"
+    active ? "text-[#334155]" : "text-slate-900"
   );
 }
 
@@ -132,7 +135,10 @@ export function ChallengeActionModal({
               boxStyles(isCreateActive),
               createBoxBase,
               isCreateActive &&
-                "hover:border-emerald-400 hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+                cn(
+                  "hover:border-[#E07A5F]/50 hover:bg-[#E07A5F]/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+                  focusRingClass
+                )
             )}
           >
             <div className={iconStyles(isCreateActive, true)}>

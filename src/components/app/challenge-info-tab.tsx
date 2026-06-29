@@ -1,6 +1,7 @@
 import { CalendarRange, Flag } from "lucide-react";
 import { RejoinButton } from "@/components/app/rejoin-button";
-import { formatDate } from "@/lib/utils";
+import { formatDate, cn } from "@/lib/utils";
+import { linkButtonClass } from "@/lib/link-button";
 
 type Props = {
   mainGoal: string;
@@ -27,7 +28,7 @@ export function ChallengeInfoTab({
           <button
             type="button"
             onClick={onEdit}
-            className="shrink-0 text-sm font-medium text-emerald-600 transition-colors hover:text-emerald-700"
+            className={cn("shrink-0 text-sm", linkButtonClass)}
           >
             Editar
           </button>
@@ -36,7 +37,7 @@ export function ChallengeInfoTab({
 
       <div className="rounded-xl bg-slate-50 p-4">
         <div className="flex items-start gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-emerald-600 shadow-sm">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-slate-800 shadow-sm">
             <Flag className="h-4 w-4" strokeWidth={2.5} />
           </span>
           <div className="min-w-0">

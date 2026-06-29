@@ -62,7 +62,7 @@ function PendingJoinRequestCard({ request }: { request: PendingJoinRequestView }
   }
 
   return (
-    <article className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+    <article className="rounded-2xl border border-[#94A98F]/40 bg-[#F8FAFC] p-4">
       <p className="font-semibold text-slate-900">Invitación a un reto</p>
       <p className="mt-1 text-sm text-slate-600">
         <strong>{request.invitedByUsername}</strong> te invitó a unirte a{" "}

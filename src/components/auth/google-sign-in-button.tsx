@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { outlineButtonClass } from "@/lib/brand-colors";
 import { isGoogleAuthEnabled } from "@/lib/google-oauth";
+import { cn } from "@/lib/utils";
 
 type GoogleSignInButtonProps = {
   inviteCode?: string;
@@ -23,7 +25,10 @@ export function GoogleSignInButton({
   return (
     <Link
       href={href}
-      className="flex h-11 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+      className={cn(
+        "flex h-11 w-full items-center justify-center gap-3 rounded-full text-sm font-semibold",
+        outlineButtonClass
+      )}
     >
       <GoogleIcon />
       {label}

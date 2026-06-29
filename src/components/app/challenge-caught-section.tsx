@@ -193,7 +193,7 @@ function ReportForm({
       <Button
         type="submit"
         disabled={pending || !reportedUserId}
-        className="w-full bg-amber-900 text-white hover:bg-amber-950"
+        className="w-full"
       >
         {pending ? "Enviando..." : "Enviar reporte"}
       </Button>

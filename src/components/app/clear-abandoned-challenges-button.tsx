@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
 import { clearAbandonedChallengesAction } from "@/actions/challenges";
+import { destructiveLinkButtonClass } from "@/lib/link-button";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -41,7 +43,7 @@ export function ClearAbandonedChallengesButton({ count }: { count: number }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 transition-colors hover:text-slate-700"
+        className={cn("inline-flex items-center gap-1.5 text-sm font-semibold", destructiveLinkButtonClass)}
       >
         <Trash2 className="h-4 w-4" strokeWidth={2} aria-hidden />
         Limpiar

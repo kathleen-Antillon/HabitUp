@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { deleteChallengeAction, leaveChallengeAction } from "@/actions/challenges";
+import { outlineButtonClass } from "@/components/landing/auth-buttons";
+import { destructiveLinkButtonClass } from "@/lib/link-button";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -77,7 +79,7 @@ export function ChallengeManageActions({
           <Button
             type="button"
             variant="outline"
-            className="w-full"
+            className={`w-full ${outlineButtonClass}`}
             disabled={loading !== null}
             onClick={handleLeave}
           >
@@ -90,7 +92,7 @@ export function ChallengeManageActions({
             type="button"
             disabled={loading !== null}
             onClick={() => setDeleteModalOpen(true)}
-            className="w-full py-2 text-center text-sm text-slate-500 transition-colors hover:text-red-600 disabled:opacity-50"
+            className={cn("w-full py-2 text-center text-sm", destructiveLinkButtonClass)}
           >
             Eliminar reto
           </button>

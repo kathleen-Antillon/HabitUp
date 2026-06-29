@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RejoinButton } from "@/components/app/rejoin-button";
+import { outlineButtonClass, primaryButtonClass } from "@/components/landing/auth-buttons";
 
 type ChallengeFields = {
   name: string;
@@ -99,7 +100,7 @@ export function ChallengeInfoEdit({
 
       <div className="rounded-xl bg-slate-50 p-4">
         <div className="flex items-start gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-emerald-600 shadow-sm">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-slate-800 shadow-sm">
             <Flag className="h-4 w-4" strokeWidth={2.5} />
           </span>
           <div className="min-w-0 flex-1">
@@ -155,13 +156,19 @@ export function ChallengeInfoEdit({
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
-      {message && <p className="text-sm text-emerald-600">{message}</p>}
+      {message && <p className="text-sm text-slate-700">{message}</p>}
 
       <div className="flex gap-2">
-        <Button type="button" variant="outline" className="flex-1" onClick={onCancel} disabled={loading}>
+        <Button
+          type="button"
+          variant="outline"
+          className={`flex-1 ${outlineButtonClass}`}
+          onClick={onCancel}
+          disabled={loading}
+        >
           Cancelar
         </Button>
-        <Button type="submit" disabled={loading} className="flex-1">
+        <Button type="submit" disabled={loading} className={`flex-1 ${primaryButtonClass}`}>
           {loading ? "Guardando..." : "Guardar"}
         </Button>
       </div>

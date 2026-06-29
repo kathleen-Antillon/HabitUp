@@ -9,12 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Logo } from "@/components/landing/auth-buttons";
+import { Logo, primaryButtonClass } from "@/components/landing/auth-buttons";
+import { linkButtonClass } from "@/lib/link-button";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" className="w-full" disabled={pending}>
+    <Button type="submit" className={`w-full ${primaryButtonClass}`} disabled={pending}>
       {pending ? "Creando cuenta..." : "Crear cuenta"}
     </Button>
   );
@@ -76,7 +77,7 @@ export function RegisterForm({ inviteCode }: { inviteCode?: string }) {
         ¿Ya tienes cuenta?{" "}
         <Link
           href={inviteCode ? `/login?invite=${inviteCode}` : "/login"}
-          className="font-medium text-emerald-600 hover:underline"
+          className={linkButtonClass}
         >
           Iniciar sesión
         </Link>

@@ -8,6 +8,8 @@ export type ChallengeTypeConfig = {
   icon: LucideIcon;
   color: string;
   ring: string;
+  /** Lucide icons vary in optical size; use a larger class when needed. */
+  iconClassName?: string;
 };
 
 export const CHALLENGE_TYPE_OPTIONS: readonly ChallengeTypeConfig[] = [
@@ -38,6 +40,7 @@ export const CHALLENGE_TYPE_OPTIONS: readonly ChallengeTypeConfig[] = [
     icon: Target,
     color: "bg-emerald-100 text-emerald-700",
     ring: "ring-emerald-400",
+    iconClassName: "h-6 w-6 shrink-0",
   },
 ] as const;
 

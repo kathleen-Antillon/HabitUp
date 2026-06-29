@@ -10,10 +10,11 @@ import {
 import { HomeClientWrapper } from "@/components/app/home-client-wrapper";
 import { EmptyHomeActions } from "@/components/app/empty-home-actions";
 import { PendingJoinRequestsBanner } from "@/components/app/pending-join-requests-banner";
-import { AppPageTitle } from "@/components/app/app-page-title";
 import { HomeChallengeCard } from "@/components/app/home-challenge-card";
 import { Plus } from "lucide-react";
 import { getPendingJoinRequestsForUser } from "@/lib/join-requests";
+import { linkButtonSemiboldClass } from "@/lib/link-button";
+import { cn } from "@/lib/utils";
 
 async function getChallengeWithStats(userId: string, challengeId: string) {
   try {
@@ -81,8 +82,7 @@ export default async function HomePage({
             streak={0}
             policeReportIds={[]}
           />
-        <div className="app-page">
-          <AppPageTitle>Home</AppPageTitle>
+        <div className="app-page pb-8">
           <PendingJoinRequestsBanner requests={pendingJoinRequests} />
           <div className="flex flex-col items-center justify-center py-14 text-center">
               <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
@@ -109,13 +109,12 @@ export default async function HomePage({
           streak={focusStats?.streak ?? 0}
           policeReportIds={policeReportIds}
         />
-        <div className="app-page">
-          <AppPageTitle>Home</AppPageTitle>
+        <div className="app-page pb-8">
           <PendingJoinRequestsBanner requests={pendingJoinRequests} />
 
           {focusChallenge && focusStats && (
-            <section className="mb-10">
-              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">
+            <section className="mb-8 min-w-0 overflow-hidden rounded-3xl bg-[#334155] px-3 pb-4 pt-4 sm:px-4 sm:pb-5">
+              <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-300">
                 Reto principal
               </h2>
               <HomeChallengeCard
@@ -127,11 +126,11 @@ export default async function HomePage({
           )}
 
           {focusChallenge && !focusStats && (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            <div className="mb-8 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
               <p className="font-medium">No se pudo cargar tu reto principal.</p>
               <Link
                 href={`/app/challenges/${focusChallenge.id}`}
-                className="mt-2 inline-block font-semibold text-emerald-700 underline"
+                className={cn("mt-2 inline-block", linkButtonSemiboldClass)}
               >
                 Abrir reto
               </Link>
@@ -139,11 +138,11 @@ export default async function HomePage({
           )}
 
           {secondaryWithStats.length > 0 && (
-            <section className={focusChallenge && !focusStats ? "mt-8" : ""}>
-              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">
+            <section>
+              <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
                 Retos secundarios
               </h2>
-              <div className="space-y-8">
+              <div className="space-y-4">
                 {secondaryWithStats.map(
                   ({ challenge, stats }) =>
                     stats && (
@@ -159,8 +158,7 @@ export default async function HomePage({
   } catch (error) {
     console.error("[home] page render failed", error);
     return (
-      <div className="px-4 py-10 text-center">
-        <AppPageTitle>Home</AppPageTitle>
+      <div className="app-page py-10 text-center">
         <p className="text-sm text-slate-600">
           Hubo un problema al cargar tu inicio. Recarga la página o vuelve a iniciar sesión.
         </p>

@@ -9,12 +9,13 @@ import { AuthDivider, GoogleAuthError, GoogleSignInButton } from "@/components/a
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Logo } from "@/components/landing/auth-buttons";
+import { Logo, primaryButtonClass } from "@/components/landing/auth-buttons";
+import { linkButtonClass } from "@/lib/link-button";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" className="w-full" disabled={pending}>
+    <Button type="submit" className={`w-full ${primaryButtonClass}`} disabled={pending}>
       {pending ? "Iniciando sesión..." : "Iniciar sesión"}
     </Button>
   );
@@ -68,7 +69,7 @@ export function LoginForm() {
 
       <div className="mt-6 space-y-2 text-center text-sm">
         <p>
-          <Link href="/forgot-password" className="font-medium text-emerald-600 hover:underline">
+          <Link href="/forgot-password" className={linkButtonClass}>
             ¿Olvidaste tu contraseña?
           </Link>
         </p>
@@ -76,7 +77,7 @@ export function LoginForm() {
           ¿No tienes cuenta?{" "}
           <Link
             href={inviteCode ? `/register?invite=${inviteCode}` : "/register"}
-            className="font-medium text-emerald-600 hover:underline"
+            className={linkButtonClass}
           >
             Crear cuenta
           </Link>

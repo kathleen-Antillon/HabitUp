@@ -6,12 +6,13 @@ import { forgotPasswordAction, type ActionResult } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Logo } from "@/components/landing/auth-buttons";
+import { Logo, primaryButtonClass } from "@/components/landing/auth-buttons";
+import { linkButtonClass } from "@/lib/link-button";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" className="w-full" disabled={pending}>
+    <Button type="submit" className={`w-full ${primaryButtonClass}`} disabled={pending}>
       {pending ? "Enviando..." : "Enviar instrucciones"}
     </Button>
   );
@@ -37,12 +38,12 @@ export function ForgotPasswordForm() {
           <Input id="email" name="email" type="email" required className="mt-1.5" />
         </div>
         {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
-        {state?.success && <p className="text-sm text-emerald-600">{state.success}</p>}
+        {state?.success && <p className="text-sm text-slate-700">{state.success}</p>}
         <SubmitButton />
       </form>
 
       <p className="mt-6 text-center text-sm text-slate-600">
-        <Link href="/login" className="font-medium text-emerald-600 hover:underline">
+        <Link href="/login" className={linkButtonClass}>
           Volver a iniciar sesión
         </Link>
       </p>

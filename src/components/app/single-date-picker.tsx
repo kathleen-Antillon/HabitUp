@@ -95,9 +95,9 @@ export function SingleDatePicker({
         id={id}
         type="button"
         onClick={openPicker}
-        className="flex h-11 w-full min-w-0 items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-left text-base ring-offset-white transition-colors hover:border-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 sm:text-sm"
+        className="flex h-11 w-full min-w-0 items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-left text-base ring-offset-white transition-colors hover:border-[#E07A5F]/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E07A5F]/40 focus-visible:ring-offset-2 sm:text-sm"
       >
-        <Calendar className="h-4 w-4 shrink-0 text-emerald-600" />
+        <Calendar className="h-4 w-4 shrink-0 text-[#E07A5F]" />
         <span className={cn("min-w-0 truncate", !value && "text-slate-400")}>{displayValue}</span>
       </button>
 
@@ -164,11 +164,11 @@ export function SingleDatePicker({
                   className={cn(
                     "aspect-square rounded-lg text-sm font-medium transition-colors",
                     isSelected
-                      ? "bg-emerald-600 text-white"
+                      ? "bg-[#E07A5F] text-white"
                       : isDisabled
                         ? "cursor-not-allowed text-slate-300"
                         : "text-slate-700 hover:bg-slate-100",
-                    isToday && !isSelected && !isDisabled && "ring-1 ring-emerald-300"
+                    isToday && !isSelected && !isDisabled && "ring-1 ring-[#E07A5F]/40"
                   )}
                 >
                   {date.getDate()}

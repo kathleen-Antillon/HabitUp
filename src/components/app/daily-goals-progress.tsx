@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { saveDailyProgressAction } from "@/actions/challenges";
 import { Button } from "@/components/ui/button";
+import { outlineButtonClass } from "@/components/landing/auth-buttons";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
@@ -61,7 +62,12 @@ export function DailyGoalsProgress({
   return (
     <div className="space-y-3">
       {!expanded ? (
-        <Button type="button" className="h-11 w-full rounded-xl" onClick={() => setExpanded(true)}>
+        <Button
+          type="button"
+          variant="outline"
+          className={cn("h-11 w-full font-semibold", outlineButtonClass)}
+          onClick={() => setExpanded(true)}
+        >
           {completeButtonLabel}
         </Button>
       ) : (
@@ -99,7 +105,7 @@ export function DailyGoalsProgress({
             <Button
               type="button"
               variant="outline"
-              className="h-11 flex-1 rounded-xl"
+              className="h-11 flex-1"
               onClick={() => setExpanded(false)}
               disabled={loading}
             >
@@ -107,7 +113,7 @@ export function DailyGoalsProgress({
             </Button>
             <Button
               type="button"
-              className="h-11 flex-1 rounded-xl"
+              className="h-11 flex-1"
               onClick={handleSave}
               disabled={loading}
             >

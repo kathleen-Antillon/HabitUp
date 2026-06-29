@@ -14,6 +14,7 @@ import { ChallengeShareButton } from "@/components/app/challenge-share-button";
 import { ChallengeTypeIcon } from "@/components/app/challenge-type-icon";
 import { PoliceReportModalGate } from "@/components/app/police-report-modal";
 import type { GoalReportView, ProgressByDate } from "@/lib/challenges";
+import { tabActiveClass } from "@/lib/brand-colors";
 import { cn } from "@/lib/utils";
 
 type TabId = "info" | "goals" | "ranking" | "reports";
@@ -197,8 +198,8 @@ export function ChallengeDetailView({
               className={cn(
                 "relative flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[10px] font-semibold transition-colors min-[380px]:px-1 min-[380px]:py-2.5 min-[380px]:text-xs",
                 isActive
-                  ? "bg-emerald-50 text-emerald-700"
-                  : "text-slate-500 hover:text-slate-700"
+                  ? tabActiveClass
+                  : "text-slate-400 hover:text-slate-500"
               )}
             >
               <Icon className="h-4 w-4 shrink-0" strokeWidth={2} />

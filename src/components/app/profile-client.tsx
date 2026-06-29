@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { deleteAccountAction, logoutAction, updateProfileAction } from "@/actions/auth";
+import { outlineButtonClass, primaryButtonClass } from "@/components/landing/auth-buttons";
+import { destructiveLinkButtonClass } from "@/lib/link-button";
 import { getUserStatus } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -45,13 +47,13 @@ export function ProfileClient({ profile }: { profile: Profile }) {
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center">
-        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-3xl font-bold text-emerald-700">
+        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-800 text-3xl font-bold text-white">
           {profile.username[0]?.toUpperCase()}
         </div>
         <h2 className="text-xl font-bold text-slate-900">{profile.username}</h2>
         <p className="text-sm text-slate-500">{profile.email}</p>
         <div className="mt-3 flex items-center justify-center gap-2">
-          <Badge variant="success">{status.label}</Badge>
+          <Badge variant="secondary">{status.label}</Badge>
           <Badge variant="outline">{profile.completedCount} retos completados</Badge>
         </div>
       </div>
@@ -73,7 +75,13 @@ export function ProfileClient({ profile }: { profile: Profile }) {
               placeholder="Cuéntanos sobre ti..."
             />
             <div className="flex gap-2">
-              <Button size="sm" onClick={handleSaveDescription}>Guardar</Button>
+              <Button
+                size="sm"
+                className={primaryButtonClass}
+                onClick={handleSaveDescription}
+              >
+                Guardar
+              </Button>
               {profile.description && (
                 <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>Cancelar</Button>
               )}
@@ -82,22 +90,26 @@ export function ProfileClient({ profile }: { profile: Profile }) {
         ) : (
           <div>
             <p className="text-slate-700">{profile.description || "Sin descripción"}</p>
-            <Button size="sm" variant="ghost" className="mt-2" onClick={() => setEditing(true)}>
+            <Button size="sm" variant="link" className="mt-2" onClick={() => setEditing(true)}>
               {profile.description ? "Editar" : "Añadir descripción"}
             </Button>
           </div>
         )}
-        {message && <p className="mt-2 text-sm text-emerald-600">{message}</p>}
+        {message && <p className="mt-2 text-sm text-slate-700">{message}</p>}
       </div>
 
       <div className="space-y-3 pt-2">
-        <Button variant="outline" className="w-full" onClick={handleLogout}>
+        <Button
+          variant="outline"
+          className={`w-full ${outlineButtonClass}`}
+          onClick={handleLogout}
+        >
           Cerrar sesión
         </Button>
         <button
           type="button"
           onClick={handleDelete}
-          className="w-full py-2 text-center text-sm text-slate-500 transition-colors hover:text-red-600"
+          className={destructiveLinkButtonClass}
         >
           Eliminar cuenta
         </button>

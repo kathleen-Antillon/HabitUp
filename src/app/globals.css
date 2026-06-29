@@ -36,6 +36,10 @@ body {
   .min-h-dvh {
     min-height: 100dvh;
   }
+
+  .main-offset-top {
+    padding-top: calc(3.5rem + env(safe-area-inset-top, 0px));
+  }
 }
 
 @layer components {

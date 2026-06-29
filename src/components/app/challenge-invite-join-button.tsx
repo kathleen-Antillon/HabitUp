@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { acceptJoinRequestAction, declineJoinRequestAction } from "@/actions/join-requests";
 import { joinChallengeAction } from "@/actions/challenges";
+import { outlineButtonClass, primaryButtonClass } from "@/components/landing/auth-buttons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -74,13 +75,18 @@ export function ChallengeInviteJoinButton({
 
   return (
     <div className={cn("mt-4 flex flex-col gap-2 sm:flex-row sm:flex-row-reverse", className)}>
-      <Button type="button" className="w-full sm:flex-1" disabled={isBusy} onClick={handleJoin}>
+      <Button
+        type="button"
+        className={`w-full sm:flex-1 ${primaryButtonClass}`}
+        disabled={isBusy}
+        onClick={handleJoin}
+      >
         {loading === "join" ? "Uniéndose..." : "Unirse al reto"}
       </Button>
       <Button
         type="button"
         variant="outline"
-        className="w-full sm:flex-1"
+        className={`w-full sm:flex-1 ${outlineButtonClass}`}
         disabled={isBusy}
         onClick={handleDecline}
       >
