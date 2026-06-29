@@ -9,9 +9,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { toInputDate } from "@/lib/utils";
 
-const storageKey = () => `habitup-missed-modal-${toInputDate(new Date())}`;
+function storageKey(dateKey: string) {
+  return `habitup-missed-modal-${dateKey}`;
+}
 
 export function MissedGoalsModal({
   open,
@@ -37,18 +38,26 @@ export function MissedGoalsModal({
   );
 }
 
-export function MissedGoalsModalGate({ show }: { show: boolean }) {
+export function MissedGoalsModalGate({
+  show,
+  dateKey,
+}: {
+  show: boolean;
+  dateKey: string;
+}) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    if (!show) return;
+    if (!show || !dateKey) return;
     if (typeof window === "undefined") return;
-    if (localStorage.getItem(storageKey())) return;
+    if (localStorage.getItem(storageKey(dateKey))) return;
     setOpen(true);
-  }, [show]);
+  }, [show, dateKey]);
 
   function handleClose() {
-    localStorage.setItem(storageKey(), "1");
+    if (dateKey) {
+      localStorage.setItem(storageKey(dateKey), "1");
+    }
     setOpen(false);
   }
 

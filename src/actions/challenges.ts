@@ -10,6 +10,8 @@ import { createJoinRequestsForChallenge, findUserByIdentifier } from "@/lib/join
 import { createReportPenitencia } from "@/lib/penitencias";
 import { notifyAtrapadoSubmitted, notifyMemberJoined, notifyMemberLeft, notifyChallengeDeleted } from "@/lib/notifications";
 import { prisma } from "@/lib/db";
+import { getTodayInTimezone } from "@/lib/timezone";
+import { getUserTimezone } from "@/lib/user-timezone";
 import { startOfDay, parseInputDate } from "@/lib/utils";
 import type { ActionResult } from "./auth";
 
@@ -274,8 +276,14 @@ export async function saveDailyProgressAction(
 
     if (!challenge) return { error: "Reto no encontrado." };
 
-    const today = startOfDay();
-    const goalsForToday = getDailyGoalsForDate(challenge.dailyGoals, "FIXED", today);
+    const timeZone = await getUserTimezone(session.id);
+    const today = getTodayInTimezone(timeZone);
+    const goalsForToday = getDailyGoalsForDate(
+      challenge.dailyGoals,
+      challenge.dailyGoalsMode,
+      today,
+      timeZone
+    );
 
     if (goalsForToday.length === 0) {
       return { error: "Este reto no tiene objetivos diarios para completar." };

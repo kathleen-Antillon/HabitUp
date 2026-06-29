@@ -5,6 +5,12 @@ import { nanoid } from "nanoid";
 import { redirect } from "next/navigation";
 import { createSession, destroySession, getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { sendPasswordResetEmail } from "@/lib/email";
+import {
+  findValidResetToken,
+  getResetTokenExpiry,
+  invalidateUserResetTokens,
+} from "@/lib/password-reset";
 
 export type ActionResult = { error?: string; success?: string; redirectTo?: string };
 
@@ -123,22 +129,64 @@ export async function forgotPasswordAction(formData: FormData): Promise<ActionRe
   if (!email) return { error: "Ingresa tu correo electrónico." };
 
   const user = await prisma.user.findUnique({ where: { email } });
-  if (user) {
+  if (user?.passwordHash) {
+    await invalidateUserResetTokens(user.id);
     const token = nanoid(32);
     await prisma.passwordResetToken.create({
       data: {
         token,
         userId: user.id,
-        expiresAt: new Date(Date.now() + 1000 * 60 * 60),
+        expiresAt: getResetTokenExpiry(),
       },
     });
-    // En producción: enviar email con link /reset-password?token=...
-    console.log(`[HabitUp] Reset link: /reset-password?token=${token}`);
+    await sendPasswordResetEmail(user.email, token);
   }
 
   return {
     success:
       "Si el correo existe, recibirás instrucciones para restablecer tu contraseña.",
+  };
+}
+
+export async function resetPasswordAction(formData: FormData): Promise<ActionResult> {
+  const token = (formData.get("token") as string)?.trim();
+  const password = formData.get("password") as string;
+  const confirmPassword = formData.get("confirmPassword") as string;
+
+  if (!token) {
+    return { error: "Enlace inválido. Solicita uno nuevo." };
+  }
+
+  if (!password || password.length < 6) {
+    return { error: "La contraseña debe tener al menos 6 caracteres." };
+  }
+
+  if (password !== confirmPassword) {
+    return { error: "Las contraseñas no coinciden." };
+  }
+
+  const resetToken = await findValidResetToken(token);
+  if (!resetToken) {
+    return {
+      error: "Este enlace ha expirado o no es válido. Solicita uno nuevo.",
+    };
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: resetToken.userId },
+      data: { passwordHash },
+    }),
+    prisma.passwordResetToken.deleteMany({
+      where: { userId: resetToken.userId },
+    }),
+  ]);
+
+  return {
+    success: "Contraseña actualizada correctamente.",
+    redirectTo: "/login?reset=success",
   };
 }
 
@@ -172,6 +220,23 @@ export async function markUserOnboarded() {
     where: { id: session.id },
     data: { isNewUser: false },
   });
+}
+
+export async function updateUserTimezoneAction(timeZone: string): Promise<ActionResult> {
+  const session = await getSession();
+  if (!session) return { error: "No autenticado." };
+
+  const { isValidTimezone, resolveTimezone } = await import("@/lib/timezone");
+  if (!isValidTimezone(timeZone)) {
+    return { error: "Zona horaria no válida." };
+  }
+
+  await prisma.user.update({
+    where: { id: session.id },
+    data: { timezone: resolveTimezone(timeZone) },
+  });
+
+  return { success: "Zona horaria actualizada." };
 }
 
 export async function setFocusChallenge(challengeId: string) {

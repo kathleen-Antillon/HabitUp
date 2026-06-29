@@ -24,12 +24,14 @@ export function HomeClientWrapper({
   showWelcome,
   showCelebration,
   showMissedYesterday,
+  missedModalDateKey,
   streak,
   policeReportIds = [],
 }: {
   showWelcome: boolean;
   showCelebration: boolean;
   showMissedYesterday: boolean;
+  missedModalDateKey: string;
   streak: number;
   policeReportIds?: string[];
 }) {
@@ -65,7 +67,10 @@ export function HomeClientWrapper({
           }
         />
       )}
-      <MissedGoalsModalGate show={showMissedYesterday && !welcomeActive} />
+      <MissedGoalsModalGate
+        show={showMissedYesterday && !welcomeActive}
+        dateKey={missedModalDateKey}
+      />
       {!welcomeActive && <PoliceReportModalGate reportIds={policeReportIds} />}
       <CelebrationModal
         open={celebrationOpen && !showMissedYesterday && !welcomeActive}

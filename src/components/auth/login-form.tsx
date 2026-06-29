@@ -26,6 +26,7 @@ export function LoginForm() {
   const googleError = searchParams.get("error") ?? undefined;
   const redirect = searchParams.get("redirect") ?? undefined;
   const inviteCode = searchParams.get("invite") ?? undefined;
+  const resetSuccess = searchParams.get("reset") === "success";
 
   const [state, formAction] = useFormState<ActionResult | undefined, FormData>(
     async (_prev, formData) => loginAction(formData),
@@ -62,6 +63,11 @@ export function LoginForm() {
             <Input id="password" name="password" type="password" required className="mt-1.5" />
           </div>
           {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
+          {resetSuccess && (
+            <p className="text-sm text-[#94A98F]">
+              Contraseña actualizada. Ya puedes iniciar sesión.
+            </p>
+          )}
           <GoogleAuthError code={googleError} />
           <SubmitButton />
         </form>

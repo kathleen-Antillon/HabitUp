@@ -17,6 +17,7 @@ model User {
   personalGoal     String?
   description      String?
   focusChallengeId String?
+  timezone         String   @default("America/Bogota")
   isNewUser        Boolean  @default(true)
   createdAt        DateTime @default(now())
 

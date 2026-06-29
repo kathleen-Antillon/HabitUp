@@ -1,10 +1,15 @@
 import { prisma } from "@/lib/db";
 import {
-  challengeDayNumber,
-  daysBetween,
-  startOfDay,
-  toInputDate,
-} from "@/lib/utils";
+  addDaysToDateKey,
+  challengeDayNumberInTimezone,
+  daysBetweenInTimezone,
+  getDateKeyInTimezone,
+  getTodayInTimezone,
+  getYesterdayInTimezone,
+  isDateWithinChallengeDay,
+} from "@/lib/timezone";
+import { getUserTimezone } from "@/lib/user-timezone";
+import { toInputDate } from "@/lib/utils";
 
 export type DayProgressSnapshot = {
   isComplete: boolean;
@@ -47,12 +52,13 @@ export type DailyGoalsMode = "FIXED" | "VARIABLE";
 export function getDailyGoalsForDate(
   dailyGoals: { id: string; label: string; order: number; date: Date | null }[],
   mode: DailyGoalsMode | string = "FIXED",
-  date: Date = new Date()
+  date: Date = new Date(),
+  timeZone?: string
 ) {
   if (mode === "VARIABLE") {
-    const day = startOfDay(date);
+    const dayKey = timeZone ? getDateKeyInTimezone(date, timeZone) : date.toISOString().slice(0, 10);
     return dailyGoals
-      .filter((goal) => goal.date && startOfDay(goal.date).getTime() === day.getTime())
+      .filter((goal) => goal.date && getDateKeyInTimezone(goal.date, timeZone ?? "UTC") === dayKey)
       .sort((a, b) => a.order - b.order);
   }
 
@@ -61,32 +67,49 @@ export function getDailyGoalsForDate(
   return [...goals].sort((a, b) => a.order - b.order);
 }
 
+/** True when the user did not fully complete all daily goals for that calendar day. */
+export function didMissGoalsOnDate(
+  challenge: {
+    startDate: Date;
+    endDate: Date;
+    dailyGoals: { id: string; label: string; order: number; date: Date | null }[];
+  },
+  dayProgress: { isComplete: boolean; completedGoalIds?: string } | null,
+  day: Date,
+  timeZone: string,
+  mode: DailyGoalsMode | string = "FIXED"
+) {
+  if (!isDateWithinChallengeDay(day, challenge.startDate, challenge.endDate, timeZone)) {
+    return false;
+  }
+
+  const goals = getDailyGoalsForDate(challenge.dailyGoals, mode, day, timeZone);
+  if (goals.length === 0) return false;
+
+  if (!dayProgress) return true;
+
+  return !dayProgress.isComplete;
+}
+
+/** @deprecated Use didMissGoalsOnDate with explicit timezone. */
 export function didMissAllGoalsYesterday(
   challenge: {
     startDate: Date;
     endDate: Date;
     dailyGoals: { id: string; label: string; order: number; date: Date | null }[];
   },
-  yesterdayProgress: { completedGoalIds: string } | null,
-  yesterday: Date = startOfDay(new Date(Date.now() - 86400000))
+  yesterdayProgress: { completedGoalIds: string; isComplete?: boolean } | null,
+  yesterday: Date,
+  timeZone = "America/Bogota"
 ) {
-  const day = startOfDay(yesterday);
-  const challengeStart = startOfDay(challenge.startDate);
-  const challengeEnd = startOfDay(challenge.endDate);
-
-  if (day < challengeStart || day > challengeEnd) return false;
-
-  const goals = getDailyGoalsForDate(challenge.dailyGoals, "FIXED", day);
-  if (goals.length === 0) return false;
-
-  if (!yesterdayProgress) return true;
-
-  try {
-    const completedIds: string[] = JSON.parse(yesterdayProgress.completedGoalIds);
-    return completedIds.length === 0;
-  } catch {
-    return true;
-  }
+  return didMissGoalsOnDate(
+    challenge,
+    yesterdayProgress
+      ? { isComplete: yesterdayProgress.isComplete ?? false, completedGoalIds: yesterdayProgress.completedGoalIds }
+      : null,
+    yesterday,
+    timeZone
+  );
 }
 
 export async function getUserChallenges(userId: string) {
@@ -131,6 +154,11 @@ export async function getFocusChallenge(userId: string) {
 }
 
 export async function getChallengeStats(userId: string, challengeId: string) {
+  const timeZone = await getUserTimezone(userId);
+  const now = new Date();
+  const today = getTodayInTimezone(timeZone, now);
+  const yesterday = getYesterdayInTimezone(timeZone, now);
+
   const challenge = await prisma.challenge.findUnique({
     where: { id: challengeId },
     include: {
@@ -147,10 +175,13 @@ export async function getChallengeStats(userId: string, challengeId: string) {
 
   if (!challenge) return null;
 
-  const today = startOfDay();
-  const totalDays = daysBetween(challenge.startDate, challenge.endDate);
+  const totalDays = daysBetweenInTimezone(
+    challenge.startDate,
+    challenge.endDate,
+    timeZone
+  );
   const currentDay = Math.min(
-    challengeDayNumber(challenge.startDate),
+    challengeDayNumberInTimezone(challenge.startDate, timeZone, today),
     totalDays
   );
   const daysRemaining = Math.max(0, totalDays - currentDay);
@@ -161,26 +192,19 @@ export async function getChallengeStats(userId: string, challengeId: string) {
     },
   });
 
-  const yesterday = startOfDay(new Date(today.getTime() - 86400000));
   const yesterdayProgress = await prisma.dailyProgress.findUnique({
     where: {
       userId_challengeId_date: { userId, challengeId, date: yesterday },
     },
   });
 
-  const showMissedYesterdayModal = didMissAllGoalsYesterday(
+  const showMissedYesterdayModal = didMissGoalsOnDate(
     challenge,
-    yesterdayProgress
+    yesterdayProgress,
+    yesterday,
+    timeZone,
+    challenge.dailyGoalsMode
   );
-
-  if (showMissedYesterdayModal) {
-    try {
-      const { ensureMissedGoalsPenitencia } = await import("@/lib/penitencias");
-      await ensureMissedGoalsPenitencia(userId, challengeId);
-    } catch {
-      // Prisma client may be stale during dev hot reload
-    }
-  }
 
   const allProgress = await prisma.dailyProgress.findMany({
     where: { challengeId, isComplete: true },
@@ -223,7 +247,12 @@ export async function getChallengeStats(userId: string, challengeId: string) {
 
   const userCompletedDays = completedDaysByUser[userId] ?? 0;
 
-  const goalsForToday = getDailyGoalsForDate(challenge.dailyGoals, "FIXED", today);
+  const goalsForToday = getDailyGoalsForDate(
+    challenge.dailyGoals,
+    challenge.dailyGoalsMode,
+    today,
+    timeZone
+  );
 
   const userProgress = await prisma.dailyProgress.findMany({
     where: { userId, challengeId },
@@ -232,7 +261,7 @@ export async function getChallengeStats(userId: string, challengeId: string) {
 
   const progressByDate = Object.fromEntries(
     userProgress.map((entry) => [
-      toInputDate(entry.date),
+      getDateKeyInTimezone(entry.date, timeZone),
       { isComplete: entry.isComplete, isPartial: entry.isPartial },
     ])
   );
@@ -244,13 +273,18 @@ export async function getChallengeStats(userId: string, challengeId: string) {
   });
 
   let streak = 0;
-  const sortedDates = recentProgress.map((p) => p.date.getTime()).sort((a, b) => b - a);
-  let checkDate = today.getTime();
-  for (const d of sortedDates) {
-    if (d === checkDate) {
+  const sortedKeys = recentProgress
+    .map((p) => getDateKeyInTimezone(p.date, timeZone))
+    .sort((a, b) => b.localeCompare(a));
+
+  let checkKey = getDateKeyInTimezone(today, timeZone);
+  for (const key of sortedKeys) {
+    if (key === checkKey) {
       streak++;
-      checkDate -= 86400000;
-    } else if (d < checkDate) break;
+      checkKey = addDaysToDateKey(checkKey, -1);
+    } else if (key < checkKey) {
+      break;
+    }
   }
 
   const showCelebration = streak > 0 && streak % 7 === 0;

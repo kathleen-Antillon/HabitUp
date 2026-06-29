@@ -1,7 +1,11 @@
 import { prisma } from "@/lib/db";
-import { didMissAllGoalsYesterday } from "@/lib/challenges";
-import { notifyPenitenciaCreated } from "@/lib/notifications";
-import { startOfDay, toInputDate } from "@/lib/utils";
+import { didMissGoalsOnDate } from "@/lib/challenges";
+import { notifyDayNotCompleted, notifyPenitenciaCreatedForMembers } from "@/lib/notifications";
+import {
+  getYesterdayInTimezone,
+} from "@/lib/timezone";
+import { getUserTimezone } from "@/lib/user-timezone";
+import { toInputDate } from "@/lib/utils";
 
 export type PenitenciaView = {
   id: string;
@@ -18,17 +22,19 @@ export type PenitenciaView = {
 
 export async function ensureMissedGoalsPenitencia(
   userId: string,
-  challengeId: string
-): Promise<void> {
+  challengeId: string,
+  timeZone?: string
+): Promise<boolean> {
+  const resolvedTimeZone = timeZone ?? (await getUserTimezone(userId));
+  const now = new Date();
+  const yesterday = getYesterdayInTimezone(resolvedTimeZone, now);
+
   const challenge = await prisma.challenge.findUnique({
     where: { id: challengeId },
     include: { dailyGoals: { orderBy: { order: "asc" } } },
   });
 
-  if (!challenge) return;
-
-  const today = startOfDay();
-  const yesterday = startOfDay(new Date(today.getTime() - 86400000));
+  if (!challenge) return false;
 
   const yesterdayProgress = await prisma.dailyProgress.findUnique({
     where: {
@@ -36,7 +42,17 @@ export async function ensureMissedGoalsPenitencia(
     },
   });
 
-  if (!didMissAllGoalsYesterday(challenge, yesterdayProgress, yesterday)) return;
+  if (
+    !didMissGoalsOnDate(
+      challenge,
+      yesterdayProgress,
+      yesterday,
+      resolvedTimeZone,
+      challenge.dailyGoalsMode
+    )
+  ) {
+    return false;
+  }
 
   const existing = await prisma.penitencia.findFirst({
     where: {
@@ -47,14 +63,28 @@ export async function ensureMissedGoalsPenitencia(
     },
   });
 
-  if (existing) return;
+  if (existing) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { username: true },
+    });
+    if (user) {
+      await notifyDayNotCompleted({
+        penitenciaId: existing.id,
+        userId,
+        challengeId,
+        challengeName: challenge.name,
+      });
+    }
+    return true;
+  }
 
   const penitencia = await prisma.penitencia.create({
     data: {
       userId,
       challengeId,
       type: "MISSED_GOALS",
-      reason: "No cumpliste con ninguno de tus objetivos ayer.",
+      reason: "No completaste todos tus objetivos ayer.",
       amount: 10,
       incidentDate: yesterday,
     },
@@ -66,15 +96,23 @@ export async function ensureMissedGoalsPenitencia(
   });
 
   if (user) {
-    await notifyPenitenciaCreated({
+    await notifyDayNotCompleted({
+      penitenciaId: penitencia.id,
+      userId,
+      challengeId,
+      challengeName: challenge.name,
+    });
+
+    await notifyPenitenciaCreatedForMembers({
       penitenciaId: penitencia.id,
       userId,
       username: user.username,
       challengeId,
       challengeName: challenge.name,
-      reason: penitencia.reason,
     });
   }
+
+  return true;
 }
 
 export async function createReportPenitencia(
@@ -127,6 +165,7 @@ export async function createReportPenitencia(
   ]);
 
   if (reportedUser && challenge) {
+    const { notifyPenitenciaCreated } = await import("@/lib/notifications");
     await notifyPenitenciaCreated({
       penitenciaId: penitencia.id,
       userId: reportedUserId,
@@ -150,17 +189,17 @@ export async function getUserPenitencias(userId: string): Promise<PenitenciaView
 
   return penitencias
     .map((p) => ({
-    id: p.id,
-    type: p.type,
-    reason: p.reason,
-    amount: p.amount,
-    incidentDate: p.incidentDate ? toInputDate(p.incidentDate) : null,
-    status: p.status,
-    createdAt: p.createdAt,
-    completedAt: p.completedAt,
-    challenge: p.challenge,
-    generatedBy: p.generatedBy,
-  }))
+      id: p.id,
+      type: p.type,
+      reason: p.reason,
+      amount: p.amount,
+      incidentDate: p.incidentDate ? toInputDate(p.incidentDate) : null,
+      status: p.status,
+      createdAt: p.createdAt,
+      completedAt: p.completedAt,
+      challenge: p.challenge,
+      generatedBy: p.generatedBy,
+    }))
     .sort((a, b) => {
       if (a.status !== b.status) {
         return a.status === "PENDING" ? -1 : 1;

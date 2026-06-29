@@ -34,6 +34,7 @@ function NotificationIcon({ type }: { type: NotificationView["type"] }) {
       return <Trash2 className={className} />;
     case "PENITENCIA_RECEIVED":
     case "PENITENCIA_CREATED":
+    case "DAY_NOT_COMPLETED":
       return <Flag className={className} />;
     case "ATRAPADO_RECEIVED":
     case "ATRAPADO_REPORTED":
@@ -46,6 +47,7 @@ function NotificationIcon({ type }: { type: NotificationView["type"] }) {
 function iconTone(type: NotificationView["type"]) {
   switch (type) {
     case "PENITENCIA_RECEIVED":
+    case "DAY_NOT_COMPLETED":
     case "ATRAPADO_RECEIVED":
       return "bg-red-100 text-red-700";
     case "JOIN_REQUEST":

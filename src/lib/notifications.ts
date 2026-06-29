@@ -8,6 +8,7 @@ export const NotificationType = {
   CHALLENGE_DELETED: "CHALLENGE_DELETED",
   PENITENCIA_RECEIVED: "PENITENCIA_RECEIVED",
   PENITENCIA_CREATED: "PENITENCIA_CREATED",
+  DAY_NOT_COMPLETED: "DAY_NOT_COMPLETED",
   ATRAPADO_RECEIVED: "ATRAPADO_RECEIVED",
   ATRAPADO_REPORTED: "ATRAPADO_REPORTED",
 } as const;
@@ -393,6 +394,63 @@ export async function notifyChallengeDeleted({
   });
 }
 
+export async function notifyDayNotCompleted({
+  penitenciaId,
+  userId,
+  challengeId,
+  challengeName,
+}: {
+  penitenciaId: string;
+  userId: string;
+  challengeId: string;
+  challengeName: string;
+}) {
+  const existing = await prisma.notification.findFirst({
+    where: {
+      userId,
+      type: NotificationType.DAY_NOT_COMPLETED,
+      entityId: penitenciaId,
+    },
+  });
+
+  if (existing) return;
+
+  await createNotification({
+    userId,
+    type: NotificationType.DAY_NOT_COMPLETED,
+    title: "Día no completado",
+    body: `No completaste tus objetivos ayer en ${challengeName}. Debes $10.`,
+    href: "/app/penitencias",
+    challengeId,
+    entityId: penitenciaId,
+  });
+}
+
+export async function notifyPenitenciaCreatedForMembers({
+  penitenciaId,
+  userId,
+  username,
+  challengeId,
+  challengeName,
+}: {
+  penitenciaId: string;
+  userId: string;
+  username: string;
+  challengeId: string;
+  challengeName: string;
+}) {
+  const recipientIds = await getEligibleRecipientsAboutUser(challengeId, userId);
+  await createNotifications(recipientIds, {
+    type: NotificationType.PENITENCIA_CREATED,
+    title: "Penitencia generada",
+    body: `${username} recibió una penitencia en ${challengeName}.`,
+    href: `/app/challenges/${challengeId}`,
+    challengeId,
+    targetUserId: userId,
+    entityId: penitenciaId,
+  });
+}
+
 export async function notifyPenitenciaCreated({
   penitenciaId,
   userId,
@@ -490,6 +548,7 @@ export function getNotificationTypeLabel(type: NotificationTypeValue): string {
     CHALLENGE_DELETED: "Reto eliminado",
     PENITENCIA_RECEIVED: "Penitencia",
     PENITENCIA_CREATED: "Penitencia",
+    DAY_NOT_COMPLETED: "Día no completado",
     ATRAPADO_RECEIVED: "Te reportaron",
     ATRAPADO_REPORTED: "Reporte",
   };

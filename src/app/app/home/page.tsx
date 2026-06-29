@@ -13,6 +13,7 @@ import { PendingJoinRequestsBanner } from "@/components/app/pending-join-request
 import { HomeChallengeCard } from "@/components/app/home-challenge-card";
 import { Plus } from "lucide-react";
 import { getPendingJoinRequestsForUser } from "@/lib/join-requests";
+import { processMissedGoalsForUser } from "@/lib/missed-goals";
 import { linkButtonSemiboldClass } from "@/lib/link-button";
 import { cn } from "@/lib/utils";
 
@@ -61,6 +62,8 @@ export default async function HomePage({
       ? await getChallengeWithStats(session.id, focusChallenge.id)
       : null;
 
+    const missedGoals = await processMissedGoalsForUser(session.id);
+
     const policeReportIds = focusChallenge
       ? await getSafePoliceReportIds(session.id, focusChallenge.id)
       : [];
@@ -78,7 +81,8 @@ export default async function HomePage({
           <HomeClientWrapper
             showWelcome={false}
             showCelebration={false}
-            showMissedYesterday={false}
+            showMissedYesterday={missedGoals.showMissedModal}
+            missedModalDateKey={missedGoals.todayDateKey}
             streak={0}
             policeReportIds={[]}
           />
@@ -105,7 +109,8 @@ export default async function HomePage({
         <HomeClientWrapper
           showWelcome={showWelcome && !focusChallenge}
           showCelebration={focusStats?.showCelebration ?? false}
-          showMissedYesterday={focusStats?.showMissedYesterdayModal ?? false}
+          showMissedYesterday={missedGoals.showMissedModal}
+          missedModalDateKey={missedGoals.todayDateKey}
           streak={focusStats?.streak ?? 0}
           policeReportIds={policeReportIds}
         />
