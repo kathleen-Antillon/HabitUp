@@ -22,13 +22,13 @@ export async function createChallengeAction(formData: FormData): Promise<ActionR
 
   const name = (formData.get("name") as string)?.trim();
   const type = formData.get("type") as string;
-  const description = (formData.get("description") as string)?.trim();
+  const description = (formData.get("description") as string)?.trim() || "";
   const startDateStr = formData.get("startDate") as string;
   const endDateStr = formData.get("endDate") as string;
   const dailyGoalsRaw = formData.get("dailyGoals") as string;
   const invitedUsersRaw = formData.get("invitedUsers") as string;
 
-  if (!name || !type || !description || !startDateStr || !endDateStr) {
+  if (!name || !type || !startDateStr || !endDateStr) {
     return { error: "Completa todos los campos requeridos." };
   }
 
@@ -50,7 +50,10 @@ export async function createChallengeAction(formData: FormData): Promise<ActionR
     : [];
 
   if (dailyGoals.length === 0) {
-    return { error: "Añade al menos un objetivo diario." };
+    return {
+      error:
+        "Debes tener al menos un objetivo diario guardado para que el reto funcione correctamente.",
+    };
   }
 
   const mainGoal = dailyGoals[0];
@@ -240,7 +243,7 @@ export async function updateChallengeAction(
   const description = data.description.trim();
   const mainGoal = data.mainGoal.trim();
 
-  if (!name || !description || !mainGoal || !data.startDate || !data.endDate) {
+  if (!name || !mainGoal || !data.startDate || !data.endDate) {
     return { error: "Completa todos los campos requeridos." };
   }
 

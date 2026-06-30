@@ -54,3 +54,7 @@ export function getChallengeTypeConfig(type: string): ChallengeTypeConfig {
     CHALLENGE_TYPE_OPTIONS.find((option) => option.value === "OTRO")!
   );
 }
+
+export function getChallengeTypeLabel(type: string): string {
+  return getChallengeTypeConfig(type).label;
+}

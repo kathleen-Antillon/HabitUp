@@ -13,6 +13,7 @@ import { ChallengeReportsTab } from "@/components/app/challenge-reports-tab";
 import { ChallengeShareButton } from "@/components/app/challenge-share-button";
 import { ChallengeTypeIcon } from "@/components/app/challenge-type-icon";
 import { PoliceReportModalGate } from "@/components/app/police-report-modal";
+import { getChallengeTypeLabel } from "@/lib/challenge-types";
 import type { GoalReportView, ProgressByDate } from "@/lib/challenges";
 import { tabActiveClass } from "@/lib/brand-colors";
 import { cn } from "@/lib/utils";
@@ -136,7 +137,9 @@ export function ChallengeDetailView({
   }
 
   const displayName = isEditing ? fields.name : challenge.name;
-  const displayDescription = isEditing ? fields.description : challenge.description;
+  const displaySubtitle = isEditing
+    ? fields.description
+    : getChallengeTypeLabel(challenge.type);
   const tabs = isCreator ? [...baseTabs, reportsTab] : baseTabs;
   const pendingReportCount = allReports.filter((r) => r.status === "PENDING").length;
 
@@ -162,7 +165,7 @@ export function ChallengeDetailView({
                 {displayName}
               </h1>
               <p className="mt-1 break-words text-sm leading-snug text-slate-500">
-                {displayDescription}
+                {displaySubtitle}
               </p>
             </div>
           )}

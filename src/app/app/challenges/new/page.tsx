@@ -13,6 +13,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatChallengeDate } from "@/lib/timezone";
 import { Plus, Trash2 } from "lucide-react";
 
+const DAILY_GOALS_REQUIRED_ERROR =
+  "Debes tener al menos un objetivo diario guardado para que el reto funcione correctamente.";
+
 function FormSection({
   title,
   description,
@@ -41,24 +44,14 @@ function FormSection({
   );
 }
 
-function localDateString(date = new Date()) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-}
-
-function defaultEndDateString(start: string) {
-  const [year, month, day] = start.split("-").map(Number);
-  const end = new Date(year, month - 1, day + 59);
-  return localDateString(end);
-}
-
 export default function NewChallengePage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [challengeType, setChallengeType] = useState<string | null>(null);
   const [dailyGoals, setDailyGoals] = useState<string[]>([""]);
   const [invitedUsers, setInvitedUsers] = useState<string[]>([]);
-  const [startDate, setStartDate] = useState(() => localDateString());
-  const [endDate, setEndDate] = useState(() => defaultEndDateString(localDateString()));
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   function addGoal() {
     setDailyGoals([...dailyGoals, ""]);
@@ -87,7 +80,7 @@ export default function NewChallengePage() {
     }
     const filledGoals = dailyGoals.map((g) => g.trim()).filter(Boolean);
     if (filledGoals.length === 0) {
-      setError("Añade al menos un objetivo diario.");
+      setError(DAILY_GOALS_REQUIRED_ERROR);
       return;
     }
     setLoading(true);
@@ -135,11 +128,10 @@ export default function NewChallengePage() {
           <ChallengeTypeSelector value={challengeType} onChange={setChallengeType} />
 
           <div>
-            <Label htmlFor="description">Descripción</Label>
+            <Label htmlFor="description">Descripción (opcional)</Label>
             <Textarea
               id="description"
               name="description"
-              required
               className="mt-2"
               placeholder="Describe tu reto..."
             />
@@ -174,9 +166,6 @@ export default function NewChallengePage() {
         >
           <div>
             <Label>Objetivos diarios</Label>
-            <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
-              Debes tener al menos un objetivo diario guardado para que el reto funcione correctamente.
-            </p>
             <div className="mt-3 space-y-3">
               {dailyGoals.map((goal, i) => (
                 <div key={i} className="flex gap-2">
@@ -184,7 +173,6 @@ export default function NewChallengePage() {
                     value={goal}
                     onChange={(e) => updateGoal(i, e.target.value)}
                     placeholder={`Objetivo ${i + 1}`}
-                    required={i === 0}
                   />
                   {dailyGoals.length > 1 && (
                     <Button type="button" variant="ghost" size="icon" onClick={() => removeGoal(i)}>

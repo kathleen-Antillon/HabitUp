@@ -3,9 +3,10 @@ import { Check, Clock } from "lucide-react";
 import { ChallengeTypeIcon } from "@/components/app/challenge-type-icon";
 import { Button } from "@/components/ui/button";
 import { outlineButtonClass } from "@/components/landing/auth-buttons";
-import { cn } from "@/lib/utils";
+import { getChallengeTypeLabel } from "@/lib/challenge-types";
 import { PinChallengeButton } from "@/components/app/pin-challenge-button";
 import type { getChallengeStats } from "@/lib/challenges";
+import { cn } from "@/lib/utils";
 
 type ChallengeStats = NonNullable<Awaited<ReturnType<typeof getChallengeStats>>>;
 
@@ -57,7 +58,7 @@ function ChallengeHeader({
         </h2>
         {isFocus ? (
           <p className="mt-0.5 break-words text-sm leading-snug text-slate-500">
-            {challenge.description}
+            {getChallengeTypeLabel(challenge.type)}
           </p>
         ) : (
           <PinChallengeButton challengeId={challenge.id} className="mt-0.5 text-left" />

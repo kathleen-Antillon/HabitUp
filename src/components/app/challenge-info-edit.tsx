@@ -191,14 +191,14 @@ export function ChallengeHeaderEdit({
       </div>
       <div>
         <Label htmlFor="challenge-description" className="sr-only">
-          Descripción
+          Descripción (opcional)
         </Label>
         <Textarea
           id="challenge-description"
           value={description}
           onChange={(e) => onDescriptionChange(e.target.value)}
-          required
           rows={2}
+          placeholder="Descripción (opcional)"
           className="resize-none border-slate-200 text-sm text-slate-600"
         />
       </div>
