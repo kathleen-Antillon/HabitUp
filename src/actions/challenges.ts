@@ -10,8 +10,8 @@ import { createJoinRequestsForChallenge, findUserByIdentifier } from "@/lib/join
 import { createReportPenitencia } from "@/lib/penitencias";
 import { notifyAtrapadoSubmitted, notifyMemberJoined, notifyMemberLeft, notifyChallengeDeleted } from "@/lib/notifications";
 import { prisma } from "@/lib/db";
-import { findDailyProgressForDay } from "@/lib/daily-progress-lookup";
-import { getTodayInTimezone } from "@/lib/timezone";
+import { findMatchingProgressRows, pickBestProgressRow } from "@/lib/daily-progress-lookup";
+import { getDateKeyInTimezone, getTodayInTimezone } from "@/lib/timezone";
 import { getUserTimezone } from "@/lib/user-timezone";
 import { startOfDay, parseInputDate } from "@/lib/utils";
 import type { ActionResult } from "./auth";
@@ -296,16 +296,16 @@ export async function saveDailyProgressAction(
     const isComplete = completed === goalsForToday.length;
     const isPartial = completed > 0 && completed < goalsForToday.length;
 
-    const existingToday = await findDailyProgressForDay(
-      session.id,
-      challengeId,
-      today,
-      timeZone
-    );
+    const allRows = await prisma.dailyProgress.findMany({
+      where: { userId: session.id, challengeId },
+    });
+    const dayKey = getDateKeyInTimezone(today, timeZone);
+    const matching = findMatchingProgressRows(allRows, dayKey, timeZone);
+    const primary = pickBestProgressRow(matching);
 
-    if (existingToday) {
+    if (primary) {
       await prisma.dailyProgress.update({
-        where: { id: existingToday.id },
+        where: { id: primary.id },
         data: {
           date: today,
           completedGoalIds: JSON.stringify(filteredCompleted),
@@ -313,6 +313,11 @@ export async function saveDailyProgressAction(
           isPartial,
         },
       });
+
+      const duplicateIds = matching.filter((row) => row.id !== primary.id).map((row) => row.id);
+      if (duplicateIds.length > 0) {
+        await prisma.dailyProgress.deleteMany({ where: { id: { in: duplicateIds } } });
+      }
     } else {
       await prisma.dailyProgress.create({
         data: {

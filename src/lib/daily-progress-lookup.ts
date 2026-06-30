@@ -1,29 +1,61 @@
 import { prisma } from "@/lib/db";
-import { addDaysToDateKey, challengeDateKey, getDateKeyInTimezone } from "@/lib/timezone";
+import {
+  addDaysToDateKey,
+  challengeDateKey,
+  dateKeyToUtcDate,
+  getDateKeyInTimezone,
+} from "@/lib/timezone";
 
 function utcDateKey(date: Date): string {
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`;
 }
 
-/** Normalize a stored progress date to one calendar day key. */
-export function canonicalProgressDayKey(date: Date, timeZone: string): string {
-  const utcKey = utcDateKey(date);
-  const tzKey = getDateKeyInTimezone(date, timeZone);
-  if (utcKey === tzKey) return tzKey;
-
-  const isUtcMidnight =
-    date.getUTCHours() === 0 &&
-    date.getUTCMinutes() === 0 &&
-    date.getUTCSeconds() === 0 &&
-    date.getUTCMilliseconds() === 0;
-
-  // Legacy rows used UTC midnight for the intended local calendar day.
-  if (isUtcMidnight) return utcKey;
-  return tzKey;
+/** Whether a stored progress row belongs to a calendar day (handles legacy UTC saves). */
+export function progressMatchesCalendarDay(
+  rowDate: Date,
+  dayKey: string,
+  timeZone: string
+): boolean {
+  return (
+    getDateKeyInTimezone(rowDate, timeZone) === dayKey || utcDateKey(rowDate) === dayKey
+  );
 }
 
-function matchesCalendarDay(rowDate: Date, dayKey: string, timeZone: string): boolean {
-  return canonicalProgressDayKey(rowDate, timeZone) === dayKey;
+type ProgressRow = {
+  id: string;
+  date: Date;
+  isComplete: boolean;
+  isPartial?: boolean;
+};
+
+export function pickBestProgressRow<T extends ProgressRow>(rows: T[]): T | null {
+  if (rows.length === 0) return null;
+
+  return [...rows].sort((a, b) => {
+    if (a.isComplete !== b.isComplete) return a.isComplete ? -1 : 1;
+
+    const aUtcMidnight =
+      a.date.getUTCHours() === 0 &&
+      a.date.getUTCMinutes() === 0 &&
+      a.date.getUTCSeconds() === 0 &&
+      a.date.getUTCMilliseconds() === 0;
+    const bUtcMidnight =
+      b.date.getUTCHours() === 0 &&
+      b.date.getUTCMinutes() === 0 &&
+      b.date.getUTCSeconds() === 0 &&
+      b.date.getUTCMilliseconds() === 0;
+
+    if (aUtcMidnight !== bUtcMidnight) return aUtcMidnight ? 1 : -1;
+    return b.date.getTime() - a.date.getTime();
+  })[0];
+}
+
+export function findMatchingProgressRows<T extends ProgressRow>(
+  rows: T[],
+  dayKey: string,
+  timeZone: string
+): T[] {
+  return rows.filter((row) => progressMatchesCalendarDay(row.date, dayKey, timeZone));
 }
 
 /** Find progress row for a calendar day, tolerating legacy UTC-midnight dates. */
@@ -39,11 +71,11 @@ export async function findDailyProgressForDay(
     where: { userId, challengeId },
   });
 
-  return rows.find((row) => matchesCalendarDay(row.date, dayKey, timeZone)) ?? null;
+  return pickBestProgressRow(findMatchingProgressRows(rows, dayKey, timeZone));
 }
 
 export function countCompleteDaysByUser(
-  progress: { userId: string; date: Date; isComplete: boolean }[],
+  progress: { id: string; userId: string; date: Date; isComplete: boolean }[],
   startDate: Date,
   endDate: Date,
   timeZone: string,
@@ -54,22 +86,33 @@ export function countCompleteDaysByUser(
   const today = todayKey ?? getDateKeyInTimezone(new Date(), timeZone);
   const effectiveEnd = today < endKey ? today : endKey;
 
-  const completeByUserDay: Record<string, Set<string>> = {};
+  const progressByUser: Record<string, typeof progress> = {};
   for (const row of progress) {
-    if (!row.isComplete) continue;
-    const dayKey = canonicalProgressDayKey(row.date, timeZone);
-    (completeByUserDay[row.userId] ??= new Set()).add(dayKey);
+    (progressByUser[row.userId] ??= []).push(row);
   }
 
   const counts: Record<string, number> = {};
-  for (const userId of Object.keys(completeByUserDay)) {
-    const completeDays = completeByUserDay[userId]!;
+  for (const [userId, rows] of Object.entries(progressByUser)) {
+    const usedIds = new Set<string>();
     let count = 0;
     let cursor = startKey;
+
     while (cursor <= effectiveEnd) {
-      if (completeDays.has(cursor)) count++;
+      const match = rows.find(
+        (row) =>
+          row.isComplete &&
+          !usedIds.has(row.id) &&
+          progressMatchesCalendarDay(row.date, cursor, timeZone)
+      );
+
+      if (match) {
+        count++;
+        usedIds.add(match.id);
+      }
+
       cursor = addDaysToDateKey(cursor, 1);
     }
+
     counts[userId] = count;
   }
 
@@ -77,26 +120,67 @@ export function countCompleteDaysByUser(
 }
 
 export function buildProgressByDate(
-  entries: { date: Date; isComplete: boolean; isPartial: boolean }[],
-  timeZone: string
+  entries: { id?: string; date: Date; isComplete: boolean; isPartial: boolean }[],
+  timeZone: string,
+  startKey?: string,
+  endKey?: string
 ): Record<string, { isComplete: boolean; isPartial: boolean }> {
   const byKey: Record<string, { isComplete: boolean; isPartial: boolean }> = {};
-
-  for (const entry of entries) {
-    const key = canonicalProgressDayKey(entry.date, timeZone);
-    const existing = byKey[key];
-    if (!existing) {
-      byKey[key] = { isComplete: entry.isComplete, isPartial: entry.isPartial };
-      continue;
+  if (!startKey || !endKey) {
+    for (const entry of entries) {
+      const key = getDateKeyInTimezone(entry.date, timeZone);
+      mergeProgressEntry(byKey, key, entry);
+      const utcKey = utcDateKey(entry.date);
+      if (utcKey !== key) mergeProgressEntry(byKey, utcKey, entry);
     }
-    const isComplete = existing.isComplete || entry.isComplete;
-    byKey[key] = {
-      isComplete,
-      isPartial: !isComplete && (existing.isPartial || entry.isPartial),
-    };
+    return byKey;
+  }
+
+  const usedIds = new Set<string>();
+  let cursor = startKey;
+  while (cursor <= endKey) {
+    const match = pickBestProgressRow(
+      findMatchingProgressRows(
+        entries.filter((e) => !e.id || !usedIds.has(e.id)) as ProgressRow[],
+        cursor,
+        timeZone
+      )
+    );
+
+    if (match) {
+      if (match.id) usedIds.add(match.id);
+      byKey[cursor] = {
+        isComplete: match.isComplete,
+        isPartial: match.isPartial ?? false,
+      };
+    }
+
+    cursor = addDaysToDateKey(cursor, 1);
   }
 
   return byKey;
+}
+
+function mergeProgressEntry(
+  byKey: Record<string, { isComplete: boolean; isPartial: boolean }>,
+  key: string,
+  entry: { isComplete: boolean; isPartial: boolean }
+) {
+  const existing = byKey[key];
+  if (!existing) {
+    byKey[key] = { isComplete: entry.isComplete, isPartial: entry.isPartial };
+    return;
+  }
+  const isComplete = existing.isComplete || entry.isComplete;
+  byKey[key] = {
+    isComplete,
+    isPartial: !isComplete && (existing.isPartial || entry.isPartial),
+  };
+}
+
+/** @deprecated Use progressMatchesCalendarDay for matching. */
+export function canonicalProgressDayKey(date: Date, timeZone: string): string {
+  return getDateKeyInTimezone(date, timeZone);
 }
 
 /** Match penitencias by calendar incident day, not exact UTC instant. */
@@ -114,7 +198,10 @@ export async function findMissedGoalsPenitenciaForDay(
 
   return (
     rows.find(
-      (row) => row.incidentDate && getDateKeyInTimezone(row.incidentDate, timeZone) === dayKey
+      (row) =>
+        row.incidentDate && progressMatchesCalendarDay(row.incidentDate, dayKey, timeZone)
     ) ?? null
   );
 }
+
+export { dateKeyToUtcDate };

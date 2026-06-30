@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import {
   addDaysToDateKey,
+  challengeDateKey,
   challengeDayNumberInTimezone,
   daysBetweenInTimezone,
   getDateKeyInTimezone,
@@ -8,7 +9,7 @@ import {
   getYesterdayInTimezone,
   isDateWithinChallengeDay,
 } from "@/lib/timezone";
-import { findDailyProgressForDay, countCompleteDaysByUser, buildProgressByDate, canonicalProgressDayKey } from "@/lib/daily-progress-lookup";
+import { findDailyProgressForDay, countCompleteDaysByUser, buildProgressByDate } from "@/lib/daily-progress-lookup";
 import { getUserTimezone } from "@/lib/user-timezone";
 import { toInputDate } from "@/lib/utils";
 
@@ -211,7 +212,7 @@ export async function getChallengeStats(userId: string, challengeId: string) {
 
   const allChallengeProgress = await prisma.dailyProgress.findMany({
     where: { challengeId },
-    select: { userId: true, date: true, isComplete: true },
+    select: { id: true, userId: true, date: true, isComplete: true },
   });
 
   const completedDaysByUser = countCompleteDaysByUser(
@@ -262,10 +263,15 @@ export async function getChallengeStats(userId: string, challengeId: string) {
 
   const userProgress = await prisma.dailyProgress.findMany({
     where: { userId, challengeId },
-    select: { date: true, isComplete: true, isPartial: true },
+    select: { id: true, date: true, isComplete: true, isPartial: true },
   });
 
-  const progressByDate = buildProgressByDate(userProgress, timeZone);
+  const progressByDate = buildProgressByDate(
+    userProgress,
+    timeZone,
+    challengeDateKey(challenge.startDate),
+    getDateKeyInTimezone(today, timeZone)
+  );
 
   const recentProgress = await prisma.dailyProgress.findMany({
     where: { userId, challengeId, isComplete: true },
@@ -275,7 +281,7 @@ export async function getChallengeStats(userId: string, challengeId: string) {
 
   let streak = 0;
   const sortedKeys = Array.from(
-    new Set(recentProgress.map((p) => canonicalProgressDayKey(p.date, timeZone)))
+    new Set(recentProgress.map((p) => getDateKeyInTimezone(p.date, timeZone)))
   ).sort((a, b) => b.localeCompare(a));
 
   let checkKey = getDateKeyInTimezone(today, timeZone);
