@@ -239,7 +239,7 @@ export async function getChallengeStats(userId: string, challengeId: string) {
   const memberRanking = challenge.members.map((m) => ({
     userId: m.user.id,
     username: m.user.username,
-    completedDays: Math.min(completedDaysByUser[m.user.id] ?? 0, currentDay),
+    completedDays: completedDaysByUser[m.user.id] ?? 0,
     memberStatus: m.status,
   }));
 
@@ -252,7 +252,7 @@ export async function getChallengeStats(userId: string, challengeId: string) {
 
   const ranking = sortChallengeRanking([...memberRanking, ...pendingRanking]);
 
-  const userCompletedDays = Math.min(completedDaysByUser[userId] ?? 0, currentDay);
+  const userCompletedDays = completedDaysByUser[userId] ?? 0;
 
   const goalsForToday = getDailyGoalsForDate(
     challenge.dailyGoals,

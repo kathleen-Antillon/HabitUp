@@ -41,14 +41,24 @@ function FormSection({
   );
 }
 
+function localDateString(date = new Date()) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function defaultEndDateString(start: string) {
+  const [year, month, day] = start.split("-").map(Number);
+  const end = new Date(year, month - 1, day + 59);
+  return localDateString(end);
+}
+
 export default function NewChallengePage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [challengeType, setChallengeType] = useState<string | null>(null);
   const [dailyGoals, setDailyGoals] = useState<string[]>([""]);
   const [invitedUsers, setInvitedUsers] = useState<string[]>([]);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState(() => localDateString());
+  const [endDate, setEndDate] = useState(() => defaultEndDateString(localDateString()));
 
   function addGoal() {
     setDailyGoals([...dailyGoals, ""]);

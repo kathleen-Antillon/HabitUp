@@ -55,13 +55,23 @@ function formatDateKey(year: number, month: number, day: number): string {
 
 /** Calendar date (YYYY-MM-DD) for an instant in the given IANA timezone. */
 export function getDateKeyInTimezone(date: Date, timeZone: string): string {
-  const parts = getZonedParts(date, timeZone);
-  return formatDateKey(parts.year, parts.month, parts.day);
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
 }
 
 /** Date-only field from forms/DB (UTC midnight Y-M-D), not a user-timezone instant. */
 export function challengeDateKey(date: Date): string {
   return formatDateKey(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate());
+}
+
+/** Parse YYYY-MM-DD from forms into a UTC calendar date. */
+export function parseChallengeDate(dateStr: string): Date {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day));
 }
 
 /** UTC instant for midnight (00:00) of a calendar date in the given timezone. */

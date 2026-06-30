@@ -11,7 +11,7 @@ import { createReportPenitencia } from "@/lib/penitencias";
 import { notifyAtrapadoSubmitted, notifyMemberJoined, notifyMemberLeft, notifyChallengeDeleted } from "@/lib/notifications";
 import { prisma } from "@/lib/db";
 import { findMatchingProgressRows, pickBestProgressRow } from "@/lib/daily-progress-lookup";
-import { getDateKeyInTimezone, getTodayInTimezone } from "@/lib/timezone";
+import { getDateKeyInTimezone, getTodayInTimezone, parseChallengeDate } from "@/lib/timezone";
 import { getUserTimezone } from "@/lib/user-timezone";
 import { startOfDay, parseInputDate } from "@/lib/utils";
 import type { ActionResult } from "./auth";
@@ -33,8 +33,8 @@ export async function createChallengeAction(formData: FormData): Promise<ActionR
     return { error: "Completa todos los campos requeridos." };
   }
 
-  const startDate = startOfDay(new Date(startDateStr));
-  const endDate = startOfDay(new Date(endDateStr));
+  const startDate = parseChallengeDate(startDateStr);
+  const endDate = parseChallengeDate(endDateStr);
 
   if (endDate < startDate) {
     return { error: "La fecha de fin debe ser posterior a la de inicio." };
@@ -233,8 +233,8 @@ export async function updateChallengeAction(
     return { error: "Completa todos los campos requeridos." };
   }
 
-  const startDate = startOfDay(new Date(data.startDate));
-  const endDate = startOfDay(new Date(data.endDate));
+  const startDate = parseChallengeDate(data.startDate);
+  const endDate = parseChallengeDate(data.endDate);
 
   if (endDate < startDate) {
     return { error: "La fecha de fin debe ser posterior a la de inicio." };
