@@ -164,7 +164,7 @@ export function getLocalHour(timeZone: string, now = new Date()): number {
   return getZonedParts(now, timeZone).hour;
 }
 
-/** e.g. "30 de junio de 2026" for a challenge date stored as UTC Y-M-D. */
+/** Format YYYY-MM-DD calendar date for display (no timezone shift). */
 export function formatChallengeDate(date: Date | string): string {
   const key = challengeDateKey(new Date(date));
   const [year, month, day] = key.split("-").map(Number);
@@ -174,6 +174,11 @@ export function formatChallengeDate(date: Date | string): string {
     month: "long",
     year: "numeric",
   }).format(new Date(Date.UTC(year, month - 1, day)));
+}
+
+/** Read a stored challenge date as YYYY-MM-DD for inputs and pickers. */
+export function challengeDateToInput(date: Date | string): string {
+  return challengeDateKey(new Date(date));
 }
 
 /** e.g. "30 de junio de 2026" in the user's timezone. */

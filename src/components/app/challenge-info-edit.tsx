@@ -19,13 +19,7 @@ type ChallengeFields = {
   endDate: Date | string;
 };
 
-function toInputDate(value: Date | string): string {
-  const d = new Date(value);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
+import { challengeDateToInput } from "@/lib/timezone";
 
 type Props = {
   challengeId: string;
@@ -48,16 +42,16 @@ export function ChallengeInfoEdit({
 }: Props) {
   const router = useRouter();
   const [mainGoal, setMainGoal] = useState(challenge.mainGoal);
-  const [startDate, setStartDate] = useState(toInputDate(challenge.startDate));
-  const [endDate, setEndDate] = useState(toInputDate(challenge.endDate));
+  const [startDate, setStartDate] = useState(challengeDateToInput(challenge.startDate));
+  const [endDate, setEndDate] = useState(challengeDateToInput(challenge.endDate));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
   useEffect(() => {
     setMainGoal(challenge.mainGoal);
-    setStartDate(toInputDate(challenge.startDate));
-    setEndDate(toInputDate(challenge.endDate));
+    setStartDate(challengeDateToInput(challenge.startDate));
+    setEndDate(challengeDateToInput(challenge.endDate));
   }, [challenge.mainGoal, challenge.startDate, challenge.endDate]);
 
   async function handleSave(e: React.FormEvent) {

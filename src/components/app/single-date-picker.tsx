@@ -9,7 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { cn, formatDate, parseInputDate, startOfDay, toInputDate } from "@/lib/utils";
+import { formatChallengeDate } from "@/lib/timezone";
+import { cn, parseInputDate, startOfDay, toInputDate } from "@/lib/utils";
 
 type Props = {
   value: string;
@@ -86,7 +87,7 @@ export function SingleDatePicker({
     setViewMonth(next.getMonth());
   }
 
-  const displayValue = value ? formatDate(value) : "Selecciona un día";
+  const displayValue = value ? formatChallengeDate(value) : "Selecciona un día";
 
   return (
     <div className="min-w-0">

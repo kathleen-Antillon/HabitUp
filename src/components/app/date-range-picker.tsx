@@ -9,7 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { cn, formatDate, parseInputDate, startOfDay, toInputDate } from "@/lib/utils";
+import { formatChallengeDate } from "@/lib/timezone";
+import { cn, parseInputDate, startOfDay, toInputDate } from "@/lib/utils";
 
 type Props = {
   startDate: string;
@@ -106,12 +107,12 @@ export function DateRangePicker({
 
   const displayValue =
     startDate && endDate
-      ? `${formatDate(startDate)} — ${formatDate(endDate)}`
+      ? `${formatChallengeDate(startDate)} — ${formatChallengeDate(endDate)}`
       : "Selecciona inicio y fin";
 
   const selectionHint =
     draftStart && !draftEnd
-      ? `Inicio: ${formatDate(draftStart)}. Elige la fecha de fin.`
+      ? `Inicio: ${formatChallengeDate(draftStart)}. Elige la fecha de fin.`
       : "Elige la fecha de inicio y luego la de fin.";
 
   return (

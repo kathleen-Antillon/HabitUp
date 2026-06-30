@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { formatDate } from "@/lib/utils";
+import { formatChallengeDate } from "@/lib/timezone";
 import { Plus, Trash2 } from "lucide-react";
 
 function FormSection({
@@ -155,8 +155,8 @@ export default function NewChallengePage() {
 
           {startDate && endDate && (
             <div className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">
-              El reto comienza el <strong>{formatDate(startDate)}</strong> y finaliza el{" "}
-              <strong>{formatDate(endDate)}</strong>.
+              El reto comienza el <strong>{formatChallengeDate(startDate)}</strong> y finaliza el{" "}
+              <strong>{formatChallengeDate(endDate)}</strong>.
             </div>
           )}
         </FormSection>
