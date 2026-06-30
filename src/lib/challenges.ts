@@ -273,9 +273,9 @@ export async function getChallengeStats(userId: string, challengeId: string) {
   });
 
   let streak = 0;
-  const sortedKeys = [
-    ...new Set(recentProgress.map((p) => canonicalProgressDayKey(p.date, timeZone))),
-  ].sort((a, b) => b.localeCompare(a));
+  const sortedKeys = Array.from(
+    new Set(recentProgress.map((p) => canonicalProgressDayKey(p.date, timeZone)))
+  ).sort((a, b) => b.localeCompare(a));
 
   let checkKey = getDateKeyInTimezone(today, timeZone);
   for (const key of sortedKeys) {
