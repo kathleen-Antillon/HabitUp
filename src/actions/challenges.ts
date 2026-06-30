@@ -11,7 +11,7 @@ import { createReportPenitencia } from "@/lib/penitencias";
 import { notifyAtrapadoSubmitted, notifyMemberJoined, notifyMemberLeft, notifyChallengeDeleted } from "@/lib/notifications";
 import { prisma } from "@/lib/db";
 import { findMatchingProgressRows, pickBestProgressRow } from "@/lib/daily-progress-lookup";
-import { getDateKeyInTimezone, getTodayInTimezone, parseChallengeDate } from "@/lib/timezone";
+import { getDateKeyInTimezone, getTodayInTimezone, parseChallengeDate, challengeDateKey } from "@/lib/timezone";
 import { getUserTimezone } from "@/lib/user-timezone";
 import { startOfDay, parseInputDate } from "@/lib/utils";
 import type { ActionResult } from "./auth";
@@ -23,13 +23,12 @@ export async function createChallengeAction(formData: FormData): Promise<ActionR
   const name = (formData.get("name") as string)?.trim();
   const type = formData.get("type") as string;
   const description = (formData.get("description") as string)?.trim();
-  const mainGoal = (formData.get("mainGoal") as string)?.trim();
   const startDateStr = formData.get("startDate") as string;
   const endDateStr = formData.get("endDate") as string;
   const dailyGoalsRaw = formData.get("dailyGoals") as string;
   const invitedUsersRaw = formData.get("invitedUsers") as string;
 
-  if (!name || !type || !description || !mainGoal || !startDateStr || !endDateStr) {
+  if (!name || !type || !description || !startDateStr || !endDateStr) {
     return { error: "Completa todos los campos requeridos." };
   }
 
@@ -49,6 +48,12 @@ export async function createChallengeAction(formData: FormData): Promise<ActionR
   const dailyGoals: string[] = dailyGoalsRaw
     ? JSON.parse(dailyGoalsRaw).filter((g: string) => g.trim())
     : [];
+
+  if (dailyGoals.length === 0) {
+    return { error: "Añade al menos un objetivo diario." };
+  }
+
+  const mainGoal = dailyGoals[0];
 
   const invitedIdentifiers: string[] = invitedUsersRaw
     ? JSON.parse(invitedUsersRaw).filter((v: string) => v.trim())
@@ -223,7 +228,7 @@ export async function updateChallengeAction(
 
   const challenge = await prisma.challenge.findUnique({
     where: { id: challengeId },
-    select: { createdById: true },
+    select: { createdById: true, startDate: true },
   });
 
   if (!challenge) return { error: "Reto no encontrado." };
@@ -237,6 +242,14 @@ export async function updateChallengeAction(
 
   if (!name || !description || !mainGoal || !data.startDate || !data.endDate) {
     return { error: "Completa todos los campos requeridos." };
+  }
+
+  const originalStartKey = challengeDateKey(challenge.startDate);
+  if (data.startDate < originalStartKey) {
+    return { error: "La fecha de inicio no puede ser anterior a la fecha original del reto." };
+  }
+  if (data.endDate < originalStartKey) {
+    return { error: "La fecha de fin no puede ser anterior a la fecha original del reto." };
   }
 
   const startDate = parseChallengeDate(data.startDate);

@@ -65,6 +65,7 @@ export default function NewChallengePage() {
   }
 
   function removeGoal(index: number) {
+    if (dailyGoals.length <= 1) return;
     setDailyGoals(dailyGoals.filter((_, i) => i !== index));
   }
 
@@ -84,12 +85,17 @@ export default function NewChallengePage() {
       setError("Selecciona las fechas de inicio y fin.");
       return;
     }
+    const filledGoals = dailyGoals.map((g) => g.trim()).filter(Boolean);
+    if (filledGoals.length === 0) {
+      setError("Añade al menos un objetivo diario.");
+      return;
+    }
     setLoading(true);
     setError("");
 
     const formData = new FormData(e.currentTarget);
     formData.set("type", challengeType);
-    formData.set("dailyGoals", JSON.stringify(dailyGoals.filter((g) => g.trim())));
+    formData.set("dailyGoals", JSON.stringify(filledGoals));
     formData.set("invitedUsers", JSON.stringify(invitedUsers.filter((v) => v.trim())));
 
     const result = await createChallengeAction(formData);
@@ -162,23 +168,15 @@ export default function NewChallengePage() {
         </FormSection>
 
         <FormSection
-          title="Objetivos del reto"
-          description="Establece la meta principal y, si quieres, los objetivos diarios a cumplir."
+          title="Objetivos diarios"
+          description="Define los objetivos que los participantes deben cumplir cada día del reto."
           bordered
         >
           <div>
-            <Label htmlFor="mainGoal">Objetivo principal</Label>
-            <Input
-              id="mainGoal"
-              name="mainGoal"
-              required
-              className="mt-2"
-              placeholder="Ej: Correr 5km diarios"
-            />
-          </div>
-
-          <div>
-            <Label>Objetivos diarios (opcional)</Label>
+            <Label>Objetivos diarios</Label>
+            <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
+              Debes tener al menos un objetivo diario guardado para que el reto funcione correctamente.
+            </p>
             <div className="mt-3 space-y-3">
               {dailyGoals.map((goal, i) => (
                 <div key={i} className="flex gap-2">
@@ -186,6 +184,7 @@ export default function NewChallengePage() {
                     value={goal}
                     onChange={(e) => updateGoal(i, e.target.value)}
                     placeholder={`Objetivo ${i + 1}`}
+                    required={i === 0}
                   />
                   {dailyGoals.length > 1 && (
                     <Button type="button" variant="ghost" size="icon" onClick={() => removeGoal(i)}>

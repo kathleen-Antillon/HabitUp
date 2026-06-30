@@ -19,6 +19,8 @@ type Props = {
   startName?: string;
   endName?: string;
   label?: string;
+  /** Earliest allowed start date (YYYY-MM-DD). Defaults to today. */
+  minStartDate?: string;
 };
 
 const weekdayLabels = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
@@ -41,11 +43,13 @@ export function DateRangePicker({
   startName = "startDate",
   endName = "endDate",
   label = "Fechas del reto",
+  minStartDate,
 }: Props) {
   const [open, setOpen] = useState(false);
   const today = startOfDay();
-  const minDateKey = toInputDate(today);
-  const initialMonth = startDate ? parseInputDate(startDate) : today;
+  const minDateKey = minStartDate ?? toInputDate(today);
+  const minAnchor = parseInputDate(minDateKey);
+  const initialMonth = startDate ? parseInputDate(startDate) : minAnchor;
   const [viewYear, setViewYear] = useState(initialMonth.getFullYear());
   const [viewMonth, setViewMonth] = useState(initialMonth.getMonth());
   const [draftStart, setDraftStart] = useState<string | null>(null);
@@ -80,8 +84,8 @@ export function DateRangePicker({
   function openPicker() {
     setDraftStart(startDate || null);
     setDraftEnd(endDate || null);
-    const anchor = startDate ? parseInputDate(startDate) : today;
-    const safeAnchor = anchor.getTime() < today.getTime() ? today : anchor;
+    const anchor = startDate ? parseInputDate(startDate) : minAnchor;
+    const safeAnchor = anchor.getTime() < minAnchor.getTime() ? minAnchor : anchor;
     setViewYear(safeAnchor.getFullYear());
     setViewMonth(safeAnchor.getMonth());
     setOpen(true);
@@ -103,15 +107,17 @@ export function DateRangePicker({
 
   function goPrevMonth() {
     const prev = new Date(viewYear, viewMonth - 1, 1);
-    if (prev.getFullYear() < today.getFullYear()) return;
-    if (prev.getFullYear() === today.getFullYear() && prev.getMonth() < today.getMonth()) return;
+    if (prev.getFullYear() < minAnchor.getFullYear()) return;
+    if (prev.getFullYear() === minAnchor.getFullYear() && prev.getMonth() < minAnchor.getMonth()) {
+      return;
+    }
     setViewYear(prev.getFullYear());
     setViewMonth(prev.getMonth());
   }
 
   const canGoPrevMonth =
-    viewYear > today.getFullYear() ||
-    (viewYear === today.getFullYear() && viewMonth > today.getMonth());
+    viewYear > minAnchor.getFullYear() ||
+    (viewYear === minAnchor.getFullYear() && viewMonth > minAnchor.getMonth());
 
   function goNextMonth() {
     const next = new Date(viewYear, viewMonth + 1, 1);
@@ -127,7 +133,9 @@ export function DateRangePicker({
   const selectionHint =
     draftStart && !draftEnd
       ? `Inicio: ${formatChallengeDate(draftStart)}. Elige la fecha de fin.`
-      : "Elige la fecha de inicio (desde hoy) y luego la de fin.";
+      : minStartDate
+        ? "Elige la fecha de inicio (no antes de la fecha original) y luego la de fin."
+        : "Elige la fecha de inicio (desde hoy) y luego la de fin.";
 
   return (
     <div>

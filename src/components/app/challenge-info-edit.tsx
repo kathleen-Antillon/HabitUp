@@ -2,14 +2,16 @@
 
 import { CalendarRange, Flag } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { updateChallengeAction } from "@/actions/challenges";
+import { DateRangePicker } from "@/components/app/date-range-picker";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RejoinButton } from "@/components/app/rejoin-button";
 import { outlineButtonClass, primaryButtonClass } from "@/components/landing/auth-buttons";
+import { challengeDateToInput } from "@/lib/timezone";
+import { Input } from "@/components/ui/input";
 
 type ChallengeFields = {
   name: string;
@@ -18,8 +20,6 @@ type ChallengeFields = {
   startDate: Date | string;
   endDate: Date | string;
 };
-
-import { challengeDateToInput } from "@/lib/timezone";
 
 type Props = {
   challengeId: string;
@@ -41,6 +41,7 @@ export function ChallengeInfoEdit({
   onSaved,
 }: Props) {
   const router = useRouter();
+  const originalStartDate = useRef(challengeDateToInput(challenge.startDate)).current;
   const [mainGoal, setMainGoal] = useState(challenge.mainGoal);
   const [startDate, setStartDate] = useState(challengeDateToInput(challenge.startDate));
   const [endDate, setEndDate] = useState(challengeDateToInput(challenge.endDate));
@@ -118,31 +119,20 @@ export function ChallengeInfoEdit({
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-slate-600">
             <CalendarRange className="h-4 w-4" strokeWidth={2} />
           </span>
-          <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="startDate" className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Inicio
-              </Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                required
-                className="mt-1.5"
-              />
-            </div>
-            <div>
-              <Label htmlFor="endDate" className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Fin
-              </Label>
-              <Input
-                id="endDate"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                required
-                className="mt-1.5"
+          <div className="min-w-0 flex-1">
+            <Label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Duración
+            </Label>
+            <div className="mt-1.5">
+              <DateRangePicker
+                startDate={startDate}
+                endDate={endDate}
+                minStartDate={originalStartDate}
+                label="Editar duración del reto"
+                onChange={(start, end) => {
+                  setStartDate(start);
+                  setEndDate(end);
+                }}
               />
             </div>
           </div>
