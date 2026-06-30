@@ -164,10 +164,8 @@ export default function NewChallengePage() {
           description="Define los objetivos que los participantes deben cumplir cada día del reto."
           bordered
         >
-          <div>
-            <Label>Objetivos diarios</Label>
-            <div className="mt-3 space-y-3">
-              {dailyGoals.map((goal, i) => (
+          <div className="space-y-3">
+            {dailyGoals.map((goal, i) => (
                 <div key={i} className="flex gap-2">
                   <Input
                     value={goal}
@@ -184,7 +182,6 @@ export default function NewChallengePage() {
               <Button type="button" variant="outline" size="sm" onClick={addGoal}>
                 <Plus className="mr-1 h-4 w-4" /> Añadir objetivo
               </Button>
-            </div>
           </div>
         </FormSection>
 
