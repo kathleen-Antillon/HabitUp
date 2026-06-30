@@ -7,6 +7,7 @@ Plataforma de retos individuales y en equipo para promover el crecimiento person
 - Landing page con secciones informativas y CTAs
 - Registro e inicio de sesión (usuario/email + contraseña)
 - Recuperación de contraseña por correo (Resend) o link en consola en desarrollo
+- Recordatorios por email para completar objetivos diarios (cron horario por zona horaria)
 - Dashboard con bottom navigation (Home, Retos, Perfil, +)
 - Crear retos (alimenticio, deportivo, intelectual, otro)
 - Objetivos diarios con seguimiento y estados (completo, casi, incompleto)
@@ -46,6 +47,8 @@ EMAIL_FROM="HabitUp <onboarding@resend.dev>"
 ```
 
 > **Recuperación de contraseña:** sin `RESEND_API_KEY`, al solicitar recuperación el enlace aparece en la consola del servidor (`npm run dev`). En producción configura [Resend](https://resend.com) y verifica tu dominio en `EMAIL_FROM`.
+
+> **Recordatorios de objetivos:** Vercel ejecuta `/api/cron/goal-reminders` cada hora. A las **20:00 hora local** de cada usuario (configurable con `GOAL_REMINDER_HOUR`) se envía un correo si tiene retos activos con objetivos incompletos hoy. Requiere `RESEND_API_KEY` y `CRON_SECRET` en Vercel.
 
 > **Nota:** La app usa **PostgreSQL** (no SQLite). En local puedes usar [Neon](https://neon.tech) gratis y pegar la connection string en `DATABASE_URL`.
 

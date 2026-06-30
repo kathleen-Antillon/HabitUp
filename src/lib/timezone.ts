@@ -143,3 +143,17 @@ export function daysBetweenInTimezone(
   const endUtc = Date.UTC(ey, em - 1, ed);
   return Math.max(0, Math.floor((endUtc - startUtc) / (1000 * 60 * 60 * 24)) + 1);
 }
+
+export function getLocalHour(timeZone: string, now = new Date()): number {
+  return getZonedParts(now, timeZone).hour;
+}
+
+/** e.g. "30 de junio de 2026" in the user's timezone. */
+export function formatLongDateInTimezone(timeZone: string, now = new Date()): string {
+  return new Intl.DateTimeFormat("es-ES", {
+    timeZone,
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(now);
+}

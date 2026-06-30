@@ -32,6 +32,18 @@ model User {
   joinRequestsReceived ChallengeJoinRequest[] @relation("JoinRequestsReceived")
   joinRequestsSent     ChallengeJoinRequest[] @relation("JoinRequestsSent")
   notifications        Notification[]
+  goalReminderLogs     GoalReminderLog[]
+}
+
+model GoalReminderLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dateKey   String
+  sentAt    DateTime @default(now())
+
+  @@unique([userId, dateKey])
+  @@index([dateKey])
 }
 
 model PasswordResetToken {

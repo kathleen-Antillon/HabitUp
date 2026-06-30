@@ -10,6 +10,7 @@ import { createJoinRequestsForChallenge, findUserByIdentifier } from "@/lib/join
 import { createReportPenitencia } from "@/lib/penitencias";
 import { notifyAtrapadoSubmitted, notifyMemberJoined, notifyMemberLeft, notifyChallengeDeleted } from "@/lib/notifications";
 import { prisma } from "@/lib/db";
+import { findDailyProgressForDay } from "@/lib/daily-progress-lookup";
 import { getTodayInTimezone } from "@/lib/timezone";
 import { getUserTimezone } from "@/lib/user-timezone";
 import { startOfDay, parseInputDate } from "@/lib/utils";
@@ -295,28 +296,35 @@ export async function saveDailyProgressAction(
     const isComplete = completed === goalsForToday.length;
     const isPartial = completed > 0 && completed < goalsForToday.length;
 
-    await prisma.dailyProgress.upsert({
-      where: {
-        userId_challengeId_date: {
+    const existingToday = await findDailyProgressForDay(
+      session.id,
+      challengeId,
+      today,
+      timeZone
+    );
+
+    if (existingToday) {
+      await prisma.dailyProgress.update({
+        where: { id: existingToday.id },
+        data: {
+          date: today,
+          completedGoalIds: JSON.stringify(filteredCompleted),
+          isComplete,
+          isPartial,
+        },
+      });
+    } else {
+      await prisma.dailyProgress.create({
+        data: {
           userId: session.id,
           challengeId,
           date: today,
+          completedGoalIds: JSON.stringify(filteredCompleted),
+          isComplete,
+          isPartial,
         },
-      },
-      create: {
-        userId: session.id,
-        challengeId,
-        date: today,
-        completedGoalIds: JSON.stringify(filteredCompleted),
-        isComplete,
-        isPartial,
-      },
-      update: {
-        completedGoalIds: JSON.stringify(filteredCompleted),
-        isComplete,
-        isPartial,
-      },
-    });
+      });
+    }
 
     revalidatePath(`/app/challenges/${challengeId}`);
     revalidatePath("/app/home");

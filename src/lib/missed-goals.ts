@@ -4,6 +4,7 @@ import {
   getDailyGoalsForDate,
   type DailyGoalsMode,
 } from "@/lib/challenges";
+import { findDailyProgressForDay } from "@/lib/daily-progress-lookup";
 import { ensureMissedGoalsPenitencia } from "@/lib/penitencias";
 import {
   getDateKeyInTimezone,
@@ -48,15 +49,12 @@ export async function processMissedGoalsForUser(
 
     if (goals.length === 0) continue;
 
-    const yesterdayProgress = await prisma.dailyProgress.findUnique({
-      where: {
-        userId_challengeId_date: {
-          userId,
-          challengeId: challenge.id,
-          date: yesterday,
-        },
-      },
-    });
+    const yesterdayProgress = await findDailyProgressForDay(
+      userId,
+      challenge.id,
+      yesterday,
+      timeZone
+    );
 
     const missed = didMissGoalsOnDate(
       challenge,

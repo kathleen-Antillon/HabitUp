@@ -1,5 +1,9 @@
 import { prisma } from "@/lib/db";
 import { didMissGoalsOnDate } from "@/lib/challenges";
+import {
+  findDailyProgressForDay,
+  findMissedGoalsPenitenciaForDay,
+} from "@/lib/daily-progress-lookup";
 import { notifyDayNotCompleted, notifyPenitenciaCreatedForMembers } from "@/lib/notifications";
 import {
   getYesterdayInTimezone,
@@ -36,11 +40,12 @@ export async function ensureMissedGoalsPenitencia(
 
   if (!challenge) return false;
 
-  const yesterdayProgress = await prisma.dailyProgress.findUnique({
-    where: {
-      userId_challengeId_date: { userId, challengeId, date: yesterday },
-    },
-  });
+  const yesterdayProgress = await findDailyProgressForDay(
+    userId,
+    challengeId,
+    yesterday,
+    resolvedTimeZone
+  );
 
   if (
     !didMissGoalsOnDate(
@@ -54,14 +59,12 @@ export async function ensureMissedGoalsPenitencia(
     return false;
   }
 
-  const existing = await prisma.penitencia.findFirst({
-    where: {
-      userId,
-      challengeId,
-      type: "MISSED_GOALS",
-      incidentDate: yesterday,
-    },
-  });
+  const existing = await findMissedGoalsPenitenciaForDay(
+    userId,
+    challengeId,
+    yesterday,
+    resolvedTimeZone
+  );
 
   if (existing) {
     const user = await prisma.user.findUnique({

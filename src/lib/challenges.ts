@@ -8,6 +8,7 @@ import {
   getYesterdayInTimezone,
   isDateWithinChallengeDay,
 } from "@/lib/timezone";
+import { findDailyProgressForDay } from "@/lib/daily-progress-lookup";
 import { getUserTimezone } from "@/lib/user-timezone";
 import { toInputDate } from "@/lib/utils";
 
@@ -186,17 +187,19 @@ export async function getChallengeStats(userId: string, challengeId: string) {
   );
   const daysRemaining = Math.max(0, totalDays - currentDay);
 
-  const todayProgress = await prisma.dailyProgress.findUnique({
-    where: {
-      userId_challengeId_date: { userId, challengeId, date: today },
-    },
-  });
+  const todayProgress = await findDailyProgressForDay(
+    userId,
+    challengeId,
+    today,
+    timeZone
+  );
 
-  const yesterdayProgress = await prisma.dailyProgress.findUnique({
-    where: {
-      userId_challengeId_date: { userId, challengeId, date: yesterday },
-    },
-  });
+  const yesterdayProgress = await findDailyProgressForDay(
+    userId,
+    challengeId,
+    yesterday,
+    timeZone
+  );
 
   const showMissedYesterdayModal = didMissGoalsOnDate(
     challenge,
