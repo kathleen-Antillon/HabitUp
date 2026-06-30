@@ -8,7 +8,7 @@ import {
   getYesterdayInTimezone,
   isDateWithinChallengeDay,
 } from "@/lib/timezone";
-import { findDailyProgressForDay } from "@/lib/daily-progress-lookup";
+import { findDailyProgressForDay, countCompleteDaysByUser, buildProgressByDate, canonicalProgressDayKey } from "@/lib/daily-progress-lookup";
 import { getUserTimezone } from "@/lib/user-timezone";
 import { toInputDate } from "@/lib/utils";
 
@@ -209,15 +209,17 @@ export async function getChallengeStats(userId: string, challengeId: string) {
     challenge.dailyGoalsMode
   );
 
-  const allProgress = await prisma.dailyProgress.findMany({
-    where: { challengeId, isComplete: true },
-    select: { userId: true },
+  const allChallengeProgress = await prisma.dailyProgress.findMany({
+    where: { challengeId },
+    select: { userId: true, date: true, isComplete: true },
   });
 
-  const completedDaysByUser = allProgress.reduce<Record<string, number>>((acc, p) => {
-    acc[p.userId] = (acc[p.userId] ?? 0) + 1;
-    return acc;
-  }, {});
+  const completedDaysByUser = countCompleteDaysByUser(
+    allChallengeProgress,
+    challenge.startDate,
+    challenge.endDate,
+    timeZone
+  );
 
   const pendingJoinRequests = await prisma.challengeJoinRequest
     .findMany({
@@ -262,12 +264,7 @@ export async function getChallengeStats(userId: string, challengeId: string) {
     select: { date: true, isComplete: true, isPartial: true },
   });
 
-  const progressByDate = Object.fromEntries(
-    userProgress.map((entry) => [
-      getDateKeyInTimezone(entry.date, timeZone),
-      { isComplete: entry.isComplete, isPartial: entry.isPartial },
-    ])
-  );
+  const progressByDate = buildProgressByDate(userProgress, timeZone);
 
   const recentProgress = await prisma.dailyProgress.findMany({
     where: { userId, challengeId, isComplete: true },
@@ -276,9 +273,9 @@ export async function getChallengeStats(userId: string, challengeId: string) {
   });
 
   let streak = 0;
-  const sortedKeys = recentProgress
-    .map((p) => getDateKeyInTimezone(p.date, timeZone))
-    .sort((a, b) => b.localeCompare(a));
+  const sortedKeys = [
+    ...new Set(recentProgress.map((p) => canonicalProgressDayKey(p.date, timeZone))),
+  ].sort((a, b) => b.localeCompare(a));
 
   let checkKey = getDateKeyInTimezone(today, timeZone);
   for (const key of sortedKeys) {
