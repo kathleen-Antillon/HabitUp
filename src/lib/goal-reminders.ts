@@ -20,6 +20,10 @@ export type GoalReminderRunResult = {
   errors: number;
 };
 
+function isHourlyReminderMode(): boolean {
+  return process.env.GOAL_REMINDER_MODE === "hourly";
+}
+
 function getReminderHour(): number {
   const parsed = Number(process.env.GOAL_REMINDER_HOUR ?? "20");
   if (Number.isFinite(parsed) && parsed >= 0 && parsed <= 23) return parsed;
@@ -109,11 +113,12 @@ export async function sendGoalRemindersForDueUsers(
   for (const user of users) {
     result.checked += 1;
     const timeZone = resolveTimezone(user.timezone);
-    const localHour = getLocalHour(timeZone, now);
-
-    if (localHour !== reminderHour) {
-      result.skipped += 1;
-      continue;
+    if (isHourlyReminderMode()) {
+      const localHour = getLocalHour(timeZone, now);
+      if (localHour !== reminderHour) {
+        result.skipped += 1;
+        continue;
+      }
     }
 
     const dateKey = getDateKeyInTimezone(now, timeZone);

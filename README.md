@@ -48,7 +48,7 @@ EMAIL_FROM="HabitUp <onboarding@resend.dev>"
 
 > **Recuperación de contraseña:** sin `RESEND_API_KEY`, al solicitar recuperación el enlace aparece en la consola del servidor (`npm run dev`). En producción configura [Resend](https://resend.com) y verifica tu dominio en `EMAIL_FROM`.
 
-> **Recordatorios de objetivos:** Vercel ejecuta `/api/cron/goal-reminders` cada hora. A las **20:00 hora local** de cada usuario (configurable con `GOAL_REMINDER_HOUR`) se envía un correo si tiene retos activos con objetivos incompletos hoy. Requiere `RESEND_API_KEY` y `CRON_SECRET` en Vercel.
+> **Recordatorios de objetivos:** Vercel ejecuta `/api/cron/goal-reminders` **una vez al día** (`0 1 * * *` UTC ≈ 8:00 PM en Panamá). En el plan **Hobby** todos los usuarios con objetivos pendientes reciben el correo en esa ejecución. Con plan **Pro**, puedes usar cron `0 * * * *` y `GOAL_REMINDER_MODE=hourly` para enviar a las 20:00 hora local de cada usuario. Requiere `RESEND_API_KEY` y `CRON_SECRET` en Vercel.
 
 > **Nota:** La app usa **PostgreSQL** (no SQLite). En local puedes usar [Neon](https://neon.tech) gratis y pegar la connection string en `DATABASE_URL`.
 
