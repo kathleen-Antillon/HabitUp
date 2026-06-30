@@ -82,7 +82,7 @@ export default async function HomePage({
             showWelcome={false}
             showCelebration={false}
             showMissedYesterday={missedGoals.showMissedModal}
-            missedModalDateKey={missedGoals.todayDateKey}
+            missedModalDateKey={missedGoals.missedModalDateKey}
             streak={0}
             policeReportIds={[]}
           />
@@ -110,7 +110,7 @@ export default async function HomePage({
           showWelcome={showWelcome && !focusChallenge}
           showCelebration={focusStats?.showCelebration ?? false}
           showMissedYesterday={missedGoals.showMissedModal}
-          missedModalDateKey={missedGoals.todayDateKey}
+          missedModalDateKey={missedGoals.missedModalDateKey}
           streak={focusStats?.streak ?? 0}
           policeReportIds={policeReportIds}
         />

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { prisma } from "@/lib/db";
 import {
   didMissGoalsOnDate,
@@ -15,17 +16,18 @@ import { getUserTimezone } from "@/lib/user-timezone";
 
 export type MissedGoalsProcessResult = {
   showMissedModal: boolean;
-  todayDateKey: string;
+  /** Calendar day that was missed (yesterday in the user's timezone). */
+  missedModalDateKey: string;
   missedChallengeIds: string[];
 };
 
-export async function processMissedGoalsForUser(
+async function processMissedGoalsForUserImpl(
   userId: string
 ): Promise<MissedGoalsProcessResult> {
   const timeZone = await getUserTimezone(userId);
   const now = new Date();
-  const todayDateKey = getDateKeyInTimezone(now, timeZone);
   const yesterday = getYesterdayInTimezone(timeZone, now);
+  const missedModalDateKey = getDateKeyInTimezone(yesterday, timeZone);
 
   const memberships = await prisma.challengeMember.findMany({
     where: { userId, status: "ACTIVE" },
@@ -44,7 +46,8 @@ export async function processMissedGoalsForUser(
     const goals = getDailyGoalsForDate(
       challenge.dailyGoals,
       challenge.dailyGoalsMode as DailyGoalsMode,
-      yesterday
+      yesterday,
+      timeZone
     );
 
     if (goals.length === 0) continue;
@@ -72,10 +75,12 @@ export async function processMissedGoalsForUser(
 
   return {
     showMissedModal: missedChallengeIds.length > 0,
-    todayDateKey,
+    missedModalDateKey,
     missedChallengeIds,
   };
 }
+
+export const processMissedGoalsForUser = cache(processMissedGoalsForUserImpl);
 
 /** Whether the user can still edit goals for the current calendar day. */
 export function canCompleteGoalsForToday(timeZone: string, now = new Date()): boolean {

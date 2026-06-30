@@ -66,21 +66,7 @@ export async function ensureMissedGoalsPenitencia(
     resolvedTimeZone
   );
 
-  if (existing) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { username: true },
-    });
-    if (user) {
-      await notifyDayNotCompleted({
-        penitenciaId: existing.id,
-        userId,
-        challengeId,
-        challengeName: challenge.name,
-      });
-    }
-    return true;
-  }
+  if (existing) return true;
 
   const penitencia = await prisma.penitencia.create({
     data: {
