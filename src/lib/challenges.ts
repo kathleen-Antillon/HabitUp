@@ -218,7 +218,8 @@ export async function getChallengeStats(userId: string, challengeId: string) {
     allChallengeProgress,
     challenge.startDate,
     challenge.endDate,
-    timeZone
+    timeZone,
+    getDateKeyInTimezone(today, timeZone)
   );
 
   const pendingJoinRequests = await prisma.challengeJoinRequest
@@ -237,7 +238,7 @@ export async function getChallengeStats(userId: string, challengeId: string) {
   const memberRanking = challenge.members.map((m) => ({
     userId: m.user.id,
     username: m.user.username,
-    completedDays: completedDaysByUser[m.user.id] ?? 0,
+    completedDays: Math.min(completedDaysByUser[m.user.id] ?? 0, currentDay),
     memberStatus: m.status,
   }));
 
@@ -250,7 +251,7 @@ export async function getChallengeStats(userId: string, challengeId: string) {
 
   const ranking = sortChallengeRanking([...memberRanking, ...pendingRanking]);
 
-  const userCompletedDays = completedDaysByUser[userId] ?? 0;
+  const userCompletedDays = Math.min(completedDaysByUser[userId] ?? 0, currentDay);
 
   const goalsForToday = getDailyGoalsForDate(
     challenge.dailyGoals,

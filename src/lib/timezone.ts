@@ -59,6 +59,11 @@ export function getDateKeyInTimezone(date: Date, timeZone: string): string {
   return formatDateKey(parts.year, parts.month, parts.day);
 }
 
+/** Date-only field from forms/DB (UTC midnight Y-M-D), not a user-timezone instant. */
+export function challengeDateKey(date: Date): string {
+  return formatDateKey(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate());
+}
+
 /** UTC instant for midnight (00:00) of a calendar date in the given timezone. */
 export function dateKeyToUtcDate(dateKey: string, timeZone: string): Date {
   const [year, month, day] = dateKey.split("-").map(Number);
@@ -110,8 +115,8 @@ export function isDateWithinChallengeDay(
   timeZone: string
 ): boolean {
   const dayKey = getDateKeyInTimezone(day, timeZone);
-  const startKey = getDateKeyInTimezone(startDate, timeZone);
-  const endKey = getDateKeyInTimezone(endDate, timeZone);
+  const startKey = challengeDateKey(startDate);
+  const endKey = challengeDateKey(endDate);
   return dayKey >= startKey && dayKey <= endKey;
 }
 
@@ -120,7 +125,7 @@ export function challengeDayNumberInTimezone(
   timeZone: string,
   today: Date = getTodayInTimezone(timeZone)
 ): number {
-  const startKey = getDateKeyInTimezone(startDate, timeZone);
+  const startKey = challengeDateKey(startDate);
   const todayKey = getDateKeyInTimezone(today, timeZone);
   const [sy, sm, sd] = startKey.split("-").map(Number);
   const [ty, tm, td] = todayKey.split("-").map(Number);
@@ -135,8 +140,9 @@ export function daysBetweenInTimezone(
   endDate: Date,
   timeZone: string
 ): number {
-  const startKey = getDateKeyInTimezone(startDate, timeZone);
-  const endKey = getDateKeyInTimezone(endDate, timeZone);
+  void timeZone;
+  const startKey = challengeDateKey(startDate);
+  const endKey = challengeDateKey(endDate);
   const [sy, sm, sd] = startKey.split("-").map(Number);
   const [ey, em, ed] = endKey.split("-").map(Number);
   const startUtc = Date.UTC(sy, sm - 1, sd);

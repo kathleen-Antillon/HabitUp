@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { getDateKeyInTimezone } from "@/lib/timezone";
+import { addDaysToDateKey, challengeDateKey, getDateKeyInTimezone } from "@/lib/timezone";
 
 function utcDateKey(date: Date): string {
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`;
@@ -46,24 +46,34 @@ export function countCompleteDaysByUser(
   progress: { userId: string; date: Date; isComplete: boolean }[],
   startDate: Date,
   endDate: Date,
-  timeZone: string
+  timeZone: string,
+  todayKey?: string
 ): Record<string, number> {
-  const startKey = getDateKeyInTimezone(startDate, timeZone);
-  const endKey = getDateKeyInTimezone(endDate, timeZone);
-  const seen: Record<string, Set<string>> = {};
+  const startKey = challengeDateKey(startDate);
+  const endKey = challengeDateKey(endDate);
+  const today = todayKey ?? getDateKeyInTimezone(new Date(), timeZone);
+  const effectiveEnd = today < endKey ? today : endKey;
 
+  const completeByUserDay: Record<string, Set<string>> = {};
   for (const row of progress) {
     if (!row.isComplete) continue;
     const dayKey = canonicalProgressDayKey(row.date, timeZone);
-    if (dayKey < startKey || dayKey > endKey) continue;
-
-    const userDays = seen[row.userId] ??= new Set();
-    userDays.add(dayKey);
+    (completeByUserDay[row.userId] ??= new Set()).add(dayKey);
   }
 
-  return Object.fromEntries(
-    Object.entries(seen).map(([userId, days]) => [userId, days.size])
-  );
+  const counts: Record<string, number> = {};
+  for (const userId of Object.keys(completeByUserDay)) {
+    const completeDays = completeByUserDay[userId]!;
+    let count = 0;
+    let cursor = startKey;
+    while (cursor <= effectiveEnd) {
+      if (completeDays.has(cursor)) count++;
+      cursor = addDaysToDateKey(cursor, 1);
+    }
+    counts[userId] = count;
+  }
+
+  return counts;
 }
 
 export function buildProgressByDate(
