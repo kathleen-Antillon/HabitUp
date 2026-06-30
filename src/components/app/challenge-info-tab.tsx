@@ -1,6 +1,7 @@
 import { CalendarRange, Flag } from "lucide-react";
 import { RejoinButton } from "@/components/app/rejoin-button";
-import { formatDate, cn } from "@/lib/utils";
+import { formatChallengeDate } from "@/lib/timezone";
+import { cn } from "@/lib/utils";
 import { linkButtonClass } from "@/lib/link-button";
 
 type Props = {
@@ -59,7 +60,7 @@ export function ChallengeInfoTab({
               Duración
             </p>
             <p className="mt-1 text-sm text-slate-700">
-              {formatDate(startDate)} — {formatDate(endDate)}
+              {formatChallengeDate(startDate)} — {formatChallengeDate(endDate)}
             </p>
           </div>
         </div>

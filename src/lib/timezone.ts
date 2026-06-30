@@ -164,6 +164,18 @@ export function getLocalHour(timeZone: string, now = new Date()): number {
   return getZonedParts(now, timeZone).hour;
 }
 
+/** e.g. "30 de junio de 2026" for a challenge date stored as UTC Y-M-D. */
+export function formatChallengeDate(date: Date | string): string {
+  const key = challengeDateKey(new Date(date));
+  const [year, month, day] = key.split("-").map(Number);
+  return new Intl.DateTimeFormat("es-ES", {
+    timeZone: "UTC",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(Date.UTC(year, month - 1, day)));
+}
+
 /** e.g. "30 de junio de 2026" in the user's timezone. */
 export function formatLongDateInTimezone(timeZone: string, now = new Date()): string {
   return new Intl.DateTimeFormat("es-ES", {
