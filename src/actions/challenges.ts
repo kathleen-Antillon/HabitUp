@@ -36,6 +36,12 @@ export async function createChallengeAction(formData: FormData): Promise<ActionR
   const startDate = parseChallengeDate(startDateStr);
   const endDate = parseChallengeDate(endDateStr);
 
+  const timeZone = await getUserTimezone(session.id);
+  const todayKey = getDateKeyInTimezone(new Date(), timeZone);
+  if (startDateStr < todayKey) {
+    return { error: "La fecha de inicio no puede ser anterior a hoy." };
+  }
+
   if (endDate < startDate) {
     return { error: "La fecha de fin debe ser posterior a la de inicio." };
   }
