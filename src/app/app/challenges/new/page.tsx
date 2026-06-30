@@ -5,12 +5,13 @@ import { createChallengeAction } from "@/actions/challenges";
 import { ChallengeTypeSelector } from "@/components/app/challenge-type-selector";
 import { DateRangePicker } from "@/components/app/date-range-picker";
 import { InviteParticipantsField } from "@/components/app/invite-participants-field";
-import { primaryButtonClass } from "@/components/landing/auth-buttons";
+import { primaryButtonClass, outlineButtonClass } from "@/components/landing/auth-buttons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { formatChallengeDate } from "@/lib/timezone";
+import { cn } from "@/lib/utils";
 import { Plus, Trash2 } from "lucide-react";
 
 const DAILY_GOALS_REQUIRED_ERROR =
@@ -21,11 +22,13 @@ function FormSection({
   description,
   children,
   bordered = false,
+  headerClassName,
 }: {
   title: string;
   description: string;
   children: React.ReactNode;
   bordered?: boolean;
+  headerClassName?: string;
 }) {
   return (
     <section
@@ -35,7 +38,7 @@ function FormSection({
           : "px-6 pb-7 pt-6"
       }
     >
-      <div className="mb-7">
+      <div className={cn("mb-7", headerClassName)}>
         <h2 className="text-base font-semibold text-slate-900">{title}</h2>
         <p className="mt-1.5 text-sm leading-relaxed text-slate-500">{description}</p>
       </div>
@@ -162,32 +165,50 @@ export default function NewChallengePage() {
         <FormSection
           title="Objetivos diarios"
           description="Define los objetivos que los participantes deben cumplir cada día del reto."
+          headerClassName="mb-4"
           bordered
         >
           <div className="space-y-3">
             {dailyGoals.map((goal, i) => (
-                <div key={i} className="flex gap-2">
-                  <Input
-                    value={goal}
-                    onChange={(e) => updateGoal(i, e.target.value)}
-                    placeholder={`Objetivo ${i + 1}`}
-                  />
-                  {dailyGoals.length > 1 && (
-                    <Button type="button" variant="ghost" size="icon" onClick={() => removeGoal(i)}>
-                      <Trash2 className="h-4 w-4 text-slate-400" />
-                    </Button>
-                  )}
-                </div>
-              ))}
-              <Button type="button" variant="outline" size="sm" onClick={addGoal}>
+              <div key={i} className="flex gap-2">
+                <Input
+                  value={goal}
+                  onChange={(e) => updateGoal(i, e.target.value)}
+                  placeholder={`Objetivo ${i + 1}`}
+                  className="rounded-xl"
+                />
+                {dailyGoals.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeGoal(i)}
+                    aria-label="Eliminar objetivo"
+                    className="shrink-0"
+                  >
+                    <Trash2 className="h-4 w-4 text-slate-400" />
+                  </Button>
+                )}
+              </div>
+            ))}
+            <div className="pt-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className={outlineButtonClass}
+                onClick={addGoal}
+              >
                 <Plus className="mr-1 h-4 w-4" /> Añadir objetivo
               </Button>
+            </div>
           </div>
         </FormSection>
 
         <FormSection
           title="Invitar participantes"
           description="Invita a usuarios con cuenta existente. Deberán aceptar la solicitud para unirse al reto."
+          headerClassName="mb-4"
           bordered
         >
           <InviteParticipantsField invites={invitedUsers} onChange={setInvitedUsers} />
